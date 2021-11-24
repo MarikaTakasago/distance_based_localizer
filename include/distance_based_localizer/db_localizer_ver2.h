@@ -68,6 +68,9 @@ class DistanceBasedLocalizer
         double yaw;
         double yawyaw;
 
+        double current_x;
+        double current_y;
+
         bool map_checker = false;
         int nya = 0;
         bool obj_checker = true;

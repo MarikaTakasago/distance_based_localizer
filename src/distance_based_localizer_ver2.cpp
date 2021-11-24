@@ -1,4 +1,4 @@
-#include "distance_based_localizer/db_localizer.h"
+#include "distance_based_localizer/db_localizer_ver2.h"
 
 DistanceBasedLocalizer::DistanceBasedLocalizer():private_nh("~")
 {
@@ -40,21 +40,6 @@ void DistanceBasedLocalizer::odometry_callback(const nav_msgs::Odometry::ConstPt
         x_by_odom = -current_odom.pose.pose.position.y + 7.0;
         y_by_odom = current_odom.pose.pose.position.x + 1.0;
 
-        // x_by_odom = -current_odom.pose.pose.position.y;
-        // y_by_odom = current_odom.pose.pose.position.x;
-        int nyaa = nya;
-
-        if(x_by_odom > 6.0 && x_by_odom < 8.5 && y_by_odom > 0.0 && y_by_odom < 8.0|| nya == 0) nya = 0;
-        if(nya <= 0  && x_by_odom > 6.0 && x_by_odom < 8.5 && y_by_odom > 8.0 || nya == 1) nya = 1;
-        if((nya <= 1 && x_by_odom > -6.0 && x_by_odom < 6.0 && y_by_odom > 0.0) || nya ==2) nya = 2;
-        if((nya <= 2 && x_by_odom > -8.5 && x_by_odom < -6.0 && y_by_odom > 5.0) || nya ==3) nya = 3;
-        if((nya <= 3 && x_by_odom > -8.5 && x_by_odom < -6.0 && y_by_odom < 5.0 && y_by_odom > -15.3) || nya ==4) nya = 4;
-        if((nya <= 4 && x_by_odom > -6.5 && x_by_odom < 5.0 && y_by_odom < 0.0) || nya ==5) nya = 5;
-        if((nya <= 5 && x_by_odom > 5.0 && x_by_odom < 8.5 && y_by_odom < 0.0) || nya ==6) nya = 6;
-
-        // if(nya != nyaa)
-        std::cout << "nya" << nya << std::endl;
-
    }
 }
 
@@ -82,16 +67,16 @@ void DistanceBasedLocalizer::object_callback(const object_detector_msgs::ObjectP
 
        if(object.Class == "bench" && dist < 4.0)
        {
-           if(nya == 4)
+           if(nya == 4 || nya == 5)
            {
-               x_by_bench = -6.0 - dist*sin(theta);
-               y_by_bench = -13.75 - dist*cos(theta);
+               x_by_bench = -6.0 - dist*cos(theta);
+               y_by_bench = -13.75 - dist*sin(theta);
                bench_prob = object.probability;
                num += 1;
                probs += bench_prob;
                bench_num += 1;
            }
-           if(nya == 5)
+           if(nya == 6)
            {
                x_by_bench = 5.0 - dist*cos(theta);
                y_by_bench = -20.5 - dist*sin(theta);
@@ -112,7 +97,7 @@ void DistanceBasedLocalizer::object_callback(const object_detector_msgs::ObjectP
            }
            if(nya == 1)
            {
-                x_by_fire = 8.0 - dist*cos(theta);
+                x_by_fire = 7.5 - dist*cos(theta);
                 y_by_fire = 18.0 - dist*sin(theta);
            }
            if(nya == 3)
@@ -123,11 +108,16 @@ void DistanceBasedLocalizer::object_callback(const object_detector_msgs::ObjectP
            if(nya == 4)
            {
                 x_by_fire = -8.0 - dist*cos(theta);
+                y_by_fire = -9.1 - dist*sin(theta);
+           }
+           if(nya == 5 && nya == 6 && dist < 4.0)
+           {
+                x_by_fire = -8.0 - dist*cos(theta);
                 y_by_fire = -20.5 - dist*sin(theta);
            }
-           if(nya == 6)
+           if(nya == 7)
            {
-                x_by_fire = 8.0 - dist*cos(theta);
+                x_by_fire = 8.1 - dist*cos(theta);
                 y_by_fire = -8.5 - dist*sin(theta);
            }
                 fire_prob = object.probability;
@@ -158,13 +148,13 @@ void DistanceBasedLocalizer::object_callback(const object_detector_msgs::ObjectP
        if(object.Class == "trash_can" && dist < 7.0)
        {
            // if(old_x > 0 && old_y < 0)
-           if(nya == 5)
+           if(nya == 6)
            {
                 x_by_trash = 3.0 - dist*cos(theta);
                 y_by_trash = -15.5 - dist*sin(theta);
            }
            // else if(old_x > 0 && old_y > 0 && old_y < 3.0)
-           if(nya == 0 || nya == 6)
+           if(nya == 0 || nya == 7)
            {
                 x_by_trash = 5.2 - dist*cos(theta);
                 y_by_trash = 2.1 - dist*sin(theta);
@@ -198,7 +188,7 @@ void DistanceBasedLocalizer::object_callback(const object_detector_msgs::ObjectP
     x_by_obj = (bench_num*x_by_bench + x_by_fire + x_by_big + trash_num*x_by_trash + x_by_firee)/num;
     y_by_obj = (bench_num*y_by_bench + y_by_fire + y_by_big + trash_num*y_by_trash + x_by_firee)/num;
 
-    std::cout << "x_by_obj" << x_by_obj << std::endl;
+    // std::cout << "x_by_obj" << x_by_obj << std::endl;
 }
 
 void DistanceBasedLocalizer::get_rpy(const geometry_msgs::Quaternion &q, double &roll, double &pitch, double &yaw)
@@ -229,41 +219,46 @@ void DistanceBasedLocalizer::estimate_pose()
 {
     db_pose.header.frame_id = "map";
     obj_checker = std::isnan(x_by_obj); //true = nan
-    // std::cout << "x_by_obj" << x_by_obj << std::endl;
-    // obj_checker = true;
-    if(!obj_checker && odom_checker)
+
+    if(!obj_checker && odom_checker) //obj ok & odom
     {
-        db_pose.pose.position.x = (x_by_odom + x_by_obj)/2;
-        db_pose.pose.position.y = (y_by_odom + y_by_obj)/2;
+        current_x = (x_by_odom + num*x_by_obj)/(num+1);
+        current_y = (y_by_odom + num*y_by_obj)/(num+1);
+        // std::cout << "1" << std::endl;
     }
-    if(obj_checker && odom_checker)
+    if(obj_checker && odom_checker) //no obj & odom
     {
-        db_pose.pose.position.x = x_by_odom;
-        db_pose.pose.position.y = y_by_odom;
+        current_x = x_by_odom;
+        current_y = y_by_odom;
+        // std::cout << "2" << std::endl;
     }
-    if(!odom_checker && !obj_checker)
+    if(!odom_checker && !obj_checker) //no odom & obj ok
     {
-        db_pose.pose.position.x = x_by_obj;
-        db_pose.pose.position.y = y_by_obj;
+        current_x = x_by_obj;
+        current_y = y_by_obj;
+        // std::cout << "3" << std::endl;
     }
 
-    double x = db_pose.pose.position.x;
-    double y = db_pose.pose.position.y;
+    db_pose.pose.position.x = current_x;
+    db_pose.pose.position.y = current_y;
+    // db_pose.pose.position.x = 8.1;
+    // db_pose.pose.position.y = -8.5;
     pub_db_pose.publish(db_pose);
 
-    std::cout << "(X,Y)" << "(" << db_pose.pose.position.x << "," << db_pose.pose.position.y << ")" << std::endl;
+    // std::cout << "(X,Y)" << "(" << db_pose.pose.position.x << "," << db_pose.pose.position.y << ")" << std::endl;
 
-    // int nyaa = nya;
-    //
-    // if(x > 6.0 && x < 8.5 && y > 0.0 && y < 8.0|| nya == 0) nya = 0;
-    // if(nya <= 0  && x > 6.0 && x < 8.5 && y > 8.0 || nya == 1) nya = 1;
-    // if((nya <= 1 && x > -6.0 && x < 6.0 && y > 0.0) || nya ==2) nya = 2;
-    // if((nya <= 2 && x > -8.5 && x < -6.0 && y > 5.0) || nya ==3) nya = 3;
-    // if((nya <= 3 && x > -8.5 && x < -6.0 && y < 5.0 && y > -15.3) || nya ==4) nya = 4;
-    // if((nya <= 4 && x > -6.5 && x < 4.8 && y < 0.0) || nya ==5) nya = 5;
-    // if((nya <= 5 && x > 5.0 && x < 8.5 && y < 0.0) || nya ==6) nya = 6;
-    //
-    // if(nya != nyaa) std::cout << "nya" << nya << std::endl;
+    int nyaa = nya;
+
+    if(current_x > 6.0 && current_x < 8.5 && current_y > 0.0 && current_y < 8.0|| nya == 0) nya = 0;
+    if(nya <= 0  && current_x > 6.0 && current_x < 8.5 && current_y > 8.0 || nya == 1) nya = 1;
+    if((nya <= 1 && current_x > -6.0 && current_x < 6.0 && current_y > 0.0) || nya ==2) nya = 2;
+    if((nya <= 2 && current_x > -8.5 && current_x < -6.0 && current_y > 5.0) || nya ==3) nya = 3;
+    if((nya <= 3 && current_x > -8.5 && current_x < -6.0 && current_y < 5.0 && current_y > -10.0) || nya ==4) nya = 4;
+    if((nya <= 4 && current_x > -8.5 && current_x < -6.0 && current_y < -10.0 && current_y > -15.5) || nya ==5) nya = 5;
+    if((nya <= 5 && current_x > -8.5 && current_x < 4.0 && current_y < -15.5) || nya ==6) nya = 6;
+    if((nya <= 6 && current_x > 4.0 && current_x < 8.5 && current_y < 0.0) || nya ==7) nya = 7;
+
+    if(nya != nyaa) std::cout << "nya" << nya << std::endl;
 
 }
 
