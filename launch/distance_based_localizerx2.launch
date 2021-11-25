@@ -4,18 +4,27 @@
     <arg name="map_file" default="$(find chibi20_2)/mapdata/goodmap.yaml"/>
     <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)" output="screen"/>
 
-    <param name="use_sim_time" value="false" type="bool"/>
+    <!-- <param name="use_sim_time" value="false" type="bool"/> -->
 
+    <!-- roomba1 -->
     <node pkg="distance_based_localizer" type="distance_based_localizer_ver2" name="distance_based_localizer_1" output="screen" >
         <remap from="/roomba/odometry" to="roomba1/roomba/odometry" />
         <remap from="/object_positions" to="roomba1/object_positions" />
         <remap from="/db_pose" to="roomba1/db_pose" />
+        <param name="x_init" value="7.0" type="double" />
+        <param name="y_init" value="1.0" type="double" />
+
     </node>
+
+    <!-- roomba2 -->
     <node pkg="distance_based_localizer" type="distance_based_localizer_ver2" name="distance_based_localizer_2" output="screen" >
         <remap from="/roomba/odometry" to="roomba2/roomba/odometry" />
         <remap from="/object_positions" to="roomba2/object_positions" />
         <remap from="/db_pose" to="roomba2/db_pose" />
         <remap from="/front_roomba_pose" to="roomba2/front_roomba_pose" />
+        <remap from="/roomba/db_pose" to="roomba1/db_pose" />
+        <param name="x_init" value="7.0" type="double" />
+        <param name="y_init" value="0.5" type="double" />
     </node>
 </launch>
 

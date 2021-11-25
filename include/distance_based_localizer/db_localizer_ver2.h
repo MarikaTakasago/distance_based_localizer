@@ -22,7 +22,7 @@ class DistanceBasedLocalizer
         void object_callback(const object_detector_msgs::ObjectPositions::ConstPtr &msg);
         void map_callback(const nav_msgs::OccupancyGrid::ConstPtr &msg);
         void odometry_callback(const nav_msgs::Odometry::ConstPtr &msg);
-        void pose_callback(const geometry_msgs::PoseStamped::ConstPtr &msg);
+        void roomba_callback_1(const geometry_msgs::PoseStamped::ConstPtr &msg);
         void roomba_position();
         void get_rpy(const geometry_msgs::Quaternion &q,double &roll,double &pitch,double &yaw);
         void get_quat(double roll,double pitch,double yaw,geometry_msgs::Quaternion &q);
@@ -35,6 +35,8 @@ class DistanceBasedLocalizer
         double old_y;
         double x_by_odom;
         double y_by_odom;
+        double x_init;//7
+        double y_init;//1
 
         double theta;
         double dist;
@@ -63,6 +65,10 @@ class DistanceBasedLocalizer
         double trash_prob;
         int trash_num;
 
+        double x_by_roomba1;
+        double y_by_roomba1;
+        double roomba1_prob;
+
         double roll;
         double pitch;
         double yaw;
@@ -75,6 +81,7 @@ class DistanceBasedLocalizer
         int nya = 0;
         bool obj_checker = true;
         bool odom_checker = false;
+        bool roomba1_checker = false;
 
 
         //member
@@ -84,6 +91,7 @@ class DistanceBasedLocalizer
         ros::Subscriber sub_object;
         ros::Subscriber sub_map;
         ros::Subscriber sub_odometry;
+        ros::Subscriber sub_roomba1;
 
         ros::Publisher pub_db_pose;
         ros::Publisher pub_front_roomba_pose;
@@ -91,6 +99,7 @@ class DistanceBasedLocalizer
         geometry_msgs::PoseStamped db_pose;
         geometry_msgs::PoseStamped front_roomba_pose;
         geometry_msgs::PoseStamped old_db_pose;
+        geometry_msgs::PoseStamped roomba1_pose;
         nav_msgs::OccupancyGrid map;
         nav_msgs::Odometry old_odom;
         nav_msgs::Odometry current_odom;

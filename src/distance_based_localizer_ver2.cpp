@@ -5,9 +5,13 @@ DistanceBasedLocalizer::DistanceBasedLocalizer():private_nh("~")
     sub_object = nh.subscribe("/object_positions",100,&DistanceBasedLocalizer::object_callback,this);
     sub_map = nh.subscribe("/map",10,&DistanceBasedLocalizer::map_callback,this);
     sub_odometry = nh.subscribe("/roomba/odometry",100,&DistanceBasedLocalizer::odometry_callback,this);
+    sub_roomba1 = nh.subscribe("/roomba/db_pose",100,&DistanceBasedLocalizer::roomba_callback_1,this);
 
     pub_db_pose = nh.advertise<geometry_msgs::PoseStamped>("/db_pose",100);
     pub_front_roomba_pose = nh.advertise<geometry_msgs::PoseStamped>("/front_roomba_pose",100);
+
+    private_nh.getParam("x_init",x_init);
+    private_nh.getParam("y_init",y_init);
 }
 
 void DistanceBasedLocalizer::map_callback(const nav_msgs::OccupancyGrid::ConstPtr& msg)
@@ -37,18 +41,15 @@ void DistanceBasedLocalizer::odometry_callback(const nav_msgs::Odometry::ConstPt
         yawyaw = yaw + M_PI/2;
         get_quat(roll,pitch,yawyaw,db_pose.pose.orientation);
 
-        x_by_odom = -current_odom.pose.pose.position.y + 7.0;
-        y_by_odom = current_odom.pose.pose.position.x + 1.0;
+        x_by_odom = -current_odom.pose.pose.position.y + x_init;
+        y_by_odom = current_odom.pose.pose.position.x + y_init;
 
    }
 }
 
-void DistanceBasedLocalizer::pose_callback(const geometry_msgs::PoseStamped::ConstPtr& msg)
+void DistanceBasedLocalizer::roomba_callback_1(const geometry_msgs::PoseStamped::ConstPtr& msg)
 {
-    // old_db_pose = db_pose;
-    // old_x = old_db_pose.pose.position.x;
-    // old_y = old_db_pose.pose.position.y;
-
+    roomba1_pose = *msg;
 }
 
 void DistanceBasedLocalizer::object_callback(const object_detector_msgs::ObjectPositions::ConstPtr& msg)
@@ -177,10 +178,17 @@ void DistanceBasedLocalizer::object_callback(const object_detector_msgs::ObjectP
                 trash_num += 1;
        }
 
-       if(object.Class == "roomba" && dist < 5.0)
+       if(object.Class == "roomba" && (dist < 4.0 || object.probability > 0.99))
        {
+           roomba1_checker = true;
+           std::cout << "roomba" << std::endl;
            roomba_dist_x = dist*cos(theta);
            roomba_dist_y = dist*sin(theta);
+
+           x_by_roomba1 = roomba1_pose.pose.position.x - roomba_dist_x;
+           y_by_roomba1 = roomba1_pose.pose.position.y - roomba_dist_y;
+
+           roomba1_prob = object.probability;
        }
 
     }
@@ -213,6 +221,7 @@ void DistanceBasedLocalizer::param_reset()
     x_by_firee = y_by_firee = firee_prob = 0;
     x_by_big = y_by_big = big_prob = 0;
     x_by_trash = y_by_trash = trash_prob = trash_num = 0;
+    x_by_roomba1 = y_by_roomba1 = roomba1_prob = 0;
 }
 
 void DistanceBasedLocalizer::estimate_pose()
@@ -226,17 +235,23 @@ void DistanceBasedLocalizer::estimate_pose()
         current_y = (y_by_odom + num*y_by_obj)/(num+1);
         // std::cout << "1" << std::endl;
     }
-    if(obj_checker && odom_checker) //no obj & odom
+    else if(obj_checker && odom_checker) //no obj & odom
     {
         current_x = x_by_odom;
         current_y = y_by_odom;
         // std::cout << "2" << std::endl;
     }
-    if(!odom_checker && !obj_checker) //no odom & obj ok
+    else if(!odom_checker && !obj_checker) //no odom & obj ok
     {
         current_x = x_by_obj;
         current_y = y_by_obj;
         // std::cout << "3" << std::endl;
+    }
+
+    if(roomba1_checker)
+    {
+        current_x = (current_x + roomba1_prob*x_by_roomba1)/(1+roomba1_prob);
+        current_y = (current_y + roomba1_prob*y_by_roomba1)/(1+roomba1_prob);
     }
 
     db_pose.pose.position.x = current_x;
