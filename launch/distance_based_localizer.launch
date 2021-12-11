@@ -6,7 +6,7 @@
 
     <param name="use_sim_time" value="false" type="bool"/>
 
-    <node pkg="distance_based_localizer" type="distance_based_localizer_ver2" name="distance_based_localizer_ver2" output="screen" >
+    <node pkg="distance_based_localizer" type="distance_based_localizer" name="distance_based_localizer" output="screen" >
         <remap from="/roomba/odometry" to="roomba1/roomba/odometry" />
         <remap from="/object_positions" to="roomba1/object_positions" />
     </node>

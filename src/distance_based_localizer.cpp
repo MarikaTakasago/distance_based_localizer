@@ -28,9 +28,11 @@ void DistanceBasedLocalizer::odometry_callback(const nav_msgs::Odometry::ConstPt
 {
    if(map_checker)
    {
+       std::cout << "b:" << odom_checker << std::endl;
         old_odom = current_odom;
         current_odom = *msg;
         odom_checker = true;
+        std::cout << "c:" << odom_checker << std::endl;
         db_pose.pose.orientation = current_odom.pose.pose.orientation;
 
         get_rpy(db_pose.pose.orientation,roll,pitch,yaw);
@@ -53,7 +55,7 @@ void DistanceBasedLocalizer::odometry_callback(const nav_msgs::Odometry::ConstPt
         if((nya <= 5 && x_by_odom > 5.0 && x_by_odom < 8.5 && y_by_odom < 0.0) || nya ==6) nya = 6;
 
         // if(nya != nyaa)
-        std::cout << "nya" << nya << std::endl;
+        // std::cout << "nya" << nya << std::endl;
 
    }
 }
@@ -198,7 +200,7 @@ void DistanceBasedLocalizer::object_callback(const object_detector_msgs::ObjectP
     x_by_obj = (bench_num*x_by_bench + x_by_fire + x_by_big + trash_num*x_by_trash + x_by_firee)/num;
     y_by_obj = (bench_num*y_by_bench + y_by_fire + y_by_big + trash_num*y_by_trash + x_by_firee)/num;
 
-    std::cout << "x_by_obj" << x_by_obj << std::endl;
+    // std::cout << "x_by_obj" << x_by_obj << std::endl;
 }
 
 void DistanceBasedLocalizer::get_rpy(const geometry_msgs::Quaternion &q, double &roll, double &pitch, double &yaw)
@@ -251,7 +253,7 @@ void DistanceBasedLocalizer::estimate_pose()
     double y = db_pose.pose.position.y;
     pub_db_pose.publish(db_pose);
 
-    std::cout << "(X,Y)" << "(" << db_pose.pose.position.x << "," << db_pose.pose.position.y << ")" << std::endl;
+    // std::cout << "(X,Y)" << "(" << db_pose.pose.position.x << "," << db_pose.pose.position.y << ")" << std::endl;
 
     // int nyaa = nya;
     //
@@ -280,8 +282,10 @@ void DistanceBasedLocalizer::process()
     ros::Rate rate(10);
     while(ros::ok())
     {
+        std::cout <<"p:"<< odom_checker <<std::endl;
         estimate_pose();
         roomba_position();
+        odom_checker = false;
 
         ros::spinOnce();
         rate.sleep();
