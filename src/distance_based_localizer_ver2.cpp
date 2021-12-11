@@ -40,9 +40,9 @@ DistanceBasedLocalizer::DistanceBasedLocalizer():private_nh("~")
     private_nh.getParam("estimated_weight_th",estimated_weight_th);
 
     db_pose.header.frame_id = "map";
-    // db_pose.pose.position.x = x_init;
-    // db_pose.pose.position.y = y_init;
-    // get_quat(yaw_init,db_pose.pose.orientation);
+    db_pose.pose.position.x = x_init;
+    db_pose.pose.position.y = y_init;
+    get_quat(yaw_init,db_pose.pose.orientation);
 
     db_poses.header.frame_id = "map";
     db_poses.poses.reserve(300);
@@ -557,15 +557,15 @@ void DistanceBasedLocalizer::change_flags(geometry_msgs::PoseStamped &current_po
     //fire
     if((current_x > 0.0 && current_y > 0.0 && current_y < 8.8) || fire_flag == 0) fire_flag = 0;
     if((fire_flag <= 0 && current_x > 0.0 && current_y > 8.8) || fire_flag == 1) fire_flag = 1;
-    if((fire_flag <= 1 && current_x < 0.0 && current_y > 0.0) || fire_flag == 2) fire_flag = 2;
-    if((fire_flag <= 2 && current_x < 0.0 && current_y > -9.5 && current_y < 0.0) || fire_flag == 3) fire_flag = 3;
-    if((fire_flag <= 3 && current_x < 0.0 && current_y < -9.5) || fire_flag == 4) fire_flag = 4;
+    if((fire_flag <= 1 && current_x < 0.0 && current_y > 9.2) || fire_flag == 2) fire_flag = 2;
+    if((fire_flag <= 2 && current_x < 0.0 && current_y > -9.2 && current_y < 9.2) || fire_flag == 3) fire_flag = 3;
+    if((fire_flag <= 3 && current_x < 0.0 && current_y < -9.2) || fire_flag == 4) fire_flag = 4;
     if((fire_flag <= 4 && current_x > 0.0 && current_y < 0.0) || fire_flag == 5) fire_flag = 5;
 
     //trash
     if((current_x > 5.0 && current_y < 2.3) || trash_flag == 0) trash_flag = 0;
     if((trash_flag <= 0 && current_x > 5.0 && current_y > 2.3) || trash_flag == 1) trash_flag = 1;
-    if((trash_flag <= 1 && current_x < 5.0 && current_y > 2.3) || trash_flag == 2) trash_flag = 2;
+    if((trash_flag <= 1 && current_x < 6.3 && current_y > 16.0) || trash_flag == 2) trash_flag = 2;
     if((trash_flag <= 2 && current_x < -4.2 && current_y < 0.0) || trash_flag == 3) trash_flag = 3;
     // if(nya <= 0  && current_x > 6.0 && current_x < 8.5 && current_y > 8.0 || nya == 1) nya = 1;
     // if((nya <= 1 && current_x > -6.0 && current_x < 6.0 && current_y > 0.0) || nya ==2) nya = 2;
