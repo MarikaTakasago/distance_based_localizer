@@ -14,7 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   tf
   object_detector_msgs
-
+  distance_based_localizer_msgs
 )
 
 ## System dependencies are found with CMake's conventions
