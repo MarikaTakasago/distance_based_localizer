@@ -431,7 +431,7 @@ double DistanceBasedLocalizer::calculate_obj_weight(int num,double probs)
 {
     double wei;
     double ave_prob = probs/num;
-    wei = num*0.1*ave_prob;
+    wei = num*0.1*ave_prob*ave_prob;
     if(wei>=1.0) wei = 0.5*wei;
     return wei;
 }
