@@ -14,7 +14,9 @@
         <remap from="/object_positions" to="roomba1/object_positions" />
         <remap from="/db_pose" to="roomba1/db_pose" />
         <remap from="/db_poses" to="roomba1/db_poses" />
+        <remap from="/score" to="roomba1/score" />
 
+        <param name="roomba_name" value="1" type="int" />
         <param name="particlce_num" value="300" type="int" />
         <param name="x_init" value="7.0" type="double" />
         <param name="y_init" value="1.0" type="double" />
@@ -35,7 +37,7 @@
         <param name="x_cov_2" value="0.01" type="double" />
         <param name="y_cov_2" value="0.01" type="double" />
         <param name="yaw_cov_2" value="0.02" type="double" />
-        <param name="limit" value="100" type="double" />
+        <param name="limit" value="100" type="int" />
         <param name="move_noise" value="0.2" type="double" />
         <param name="estimated_weight_th" value="1.8" type="double" />
     </node>

@@ -16,6 +16,7 @@
 #include <tf/transform_broadcaster.h>
 #include "object_detector_msgs/ObjectPosition.h"
 #include "object_detector_msgs/ObjectPositions.h"
+#include "distance_based_localizer_msgs/RoombaScore.h"
 
 class DistanceBasedLocalizer
 {
@@ -78,12 +79,14 @@ class DistanceBasedLocalizer
 
         void roomba_position();
         void make_path(geometry_msgs::PoseStamped &pose);
+        void calculate_score(int num,double probs,geometry_msgs::PoseStamped &current_pose);
 
         double make_dyaw(double yawa,double yawi);
 
         //param
 
         int particle_num;
+        int roomba_name;
 
         double x_old;
         double y_old;
@@ -211,6 +214,7 @@ class DistanceBasedLocalizer
         ros::Publisher pub_db_poses;
         ros::Publisher pub_front_roomba_pose;
         ros::Publisher pub_path;
+        ros::Publisher pub_score;
 
         geometry_msgs::PoseStamped db_pose;
         geometry_msgs::PoseArray db_poses;
@@ -224,9 +228,10 @@ class DistanceBasedLocalizer
 
         object_detector_msgs::ObjectPositions objects;
 
+        distance_based_localizer_msgs::RoombaScore score;
+
         std::vector<Particle> p_array;
         std::vector<Objects> landmark;
-        // Objects landmark[6];
         std::vector<double> per_prob;
 
 };

@@ -14,8 +14,10 @@ DistanceBasedLocalizer::DistanceBasedLocalizer():private_nh("~")
     pub_db_poses = nh.advertise<geometry_msgs::PoseArray>("/db_poses",100);
     pub_path = nh.advertise<nav_msgs::Path>("/path",100);
     pub_front_roomba_pose = nh.advertise<geometry_msgs::PoseStamped>("/front_roomba_pose",100);
+    pub_score = nh.advertise<distance_based_localizer_msgs::RoombaScore>("/score",100);
 
     private_nh.getParam("particle_num",particle_num);
+    private_nh.getParam("roomba_name",roomba_name);
     private_nh.getParam("x_init",x_init);
     private_nh.getParam("y_init",y_init);
     private_nh.getParam("yaw_init",yaw_init);
@@ -49,6 +51,7 @@ DistanceBasedLocalizer::DistanceBasedLocalizer():private_nh("~")
     db_poses.poses.reserve(300);
 
     p_array.reserve(300);
+
     landmark.reserve(30);
     per_prob.reserve(30);
 }
@@ -590,6 +593,12 @@ void DistanceBasedLocalizer::make_path(geometry_msgs::PoseStamped &pose)
 {
 }
 
+void DistanceBasedLocalizer::calculate_score(int num,double probs,geometry_msgs::PoseStamped &current_pose)
+{
+    score.name = roomba_name;
+    score.pose = current_pose;
+    score.score = probs/num;
+}
 
 void DistanceBasedLocalizer::process()
 {
@@ -634,6 +643,8 @@ void DistanceBasedLocalizer::process()
             make_poses(p_array);
             pub_db_poses.publish(db_poses);
             pub_db_pose.publish(db_pose);
+            calculate_score(obj_num,probs,db_pose);
+            pub_score.publish(score);
 
             // pub_path.publish(roomba_path);
 
