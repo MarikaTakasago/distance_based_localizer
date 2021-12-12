@@ -12,6 +12,7 @@ DistanceBasedLocalizer::DistanceBasedLocalizer():private_nh("~")
 
     pub_db_pose = nh.advertise<geometry_msgs::PoseStamped>("/db_pose",100);
     pub_db_poses = nh.advertise<geometry_msgs::PoseArray>("/db_poses",100);
+    pub_path = nh.advertise<nav_msgs::Path>("/path",100);
     pub_front_roomba_pose = nh.advertise<geometry_msgs::PoseStamped>("/front_roomba_pose",100);
 
     private_nh.getParam("particle_num",particle_num);
@@ -173,13 +174,11 @@ void DistanceBasedLocalizer::param_reset()
 {
     obj_num = 0;
     probs = 0;
-    x_by_obj = y_by_obj = 0;
-    x_by_bench = y_by_bench = bench_prob = bench_num = 0;
-    x_by_fire = y_by_fire = fire_prob = 0;
-    x_by_firee = y_by_firee = firee_prob = 0;
-    x_by_big = y_by_big = big_prob = 0;
-    x_by_trash = y_by_trash = trash_prob = trash_num = 0;
     x_by_roomba1 = y_by_roomba1 = roomba1_prob = 0;
+    for(int i=0;i<30;i++)
+    {
+        landmark[i].prob = 0;
+    }
 }
 
 void DistanceBasedLocalizer::normalize_ps(std::vector<Particle> &p_array)
@@ -224,10 +223,11 @@ void DistanceBasedLocalizer::Particle::p_move(double dtrans,double drot1,double 
     drot1 += dbl->make_gaussian(0.0,drot1*dbl->move_noise);
     drot2 += dbl->make_gaussian(0.0,drot2*dbl->move_noise);
 
-    double new_yaw = dbl->get_rpy(p_pose.pose.orientation);
-    p_pose.pose.position.x += dtrans * cos(dbl->set_yaw(new_yaw + drot1));
-    p_pose.pose.position.y += dtrans * sin(dbl->set_yaw(new_yaw + drot1));
-    dbl->get_quat(dbl->set_yaw(new_yaw + drot1 + drot2),p_pose.pose.orientation);
+    double old_yaw = dbl->get_rpy(p_pose.pose.orientation);
+    // std::cout << "old_yaw" <<old_yaw<<std::endl;
+    p_pose.pose.position.x += dtrans * cos(dbl->set_yaw(old_yaw + drot1));
+    p_pose.pose.position.y += dtrans * sin(dbl->set_yaw(old_yaw + drot1));
+    dbl->get_quat(dbl->set_yaw(old_yaw + drot1 + drot2),p_pose.pose.orientation);
 }
 
 void DistanceBasedLocalizer::observation_update()
@@ -256,7 +256,7 @@ void DistanceBasedLocalizer::observation_update()
 
            landmark[i].prob = object.probability;
            obj_num += 1;
-           probs += bench_prob;
+           probs += object.probability;
            bench_num += 1;
        }
 
@@ -294,9 +294,10 @@ void DistanceBasedLocalizer::observation_update()
                 landmark[i].x = 8.1 - dist*cos(theta);
                 landmark[i].y = -8.5 - dist*sin(theta);
            }
-                landmark[i].prob = object.probability;
-                obj_num += 1;
-                probs += fire_prob;
+           landmark[i].prob = object.probability;
+           obj_num += 1;
+           probs += object.probability;
+
        }
 
        if(object.Class == "big_bench" && dist < 4.0)
@@ -306,10 +307,11 @@ void DistanceBasedLocalizer::observation_update()
            landmark[i].y = -19.0 - dist*sin(theta);
            landmark[i].prob = object.probability;
            obj_num += 1;
-           probs += big_prob;
+           probs += object.probability;
+
        }
 
-       if(object.Class == "trash_can" && dist < 7.0)
+       if(object.Class == "trash_can" && dist < 5.0)
        {
            landmark[i].name = "trash";
            // if(old_x > 0 && old_y < 0)
@@ -335,7 +337,8 @@ void DistanceBasedLocalizer::observation_update()
            }
                 landmark[i].prob = object.probability;
                 obj_num += 1;
-                probs += trash_prob;
+           probs += object.probability;
+
                 trash_num += 1;
       }
 
@@ -355,13 +358,13 @@ void DistanceBasedLocalizer::observation_update()
        i += 1;
     }
 
-    calculate_pose_by_objects(i);
+    calculate_pose_by_objects(i,probs);
     estimate_pose();
     calculate_weight(max_weight);
     // std::cout << "observation" << std::endl;
 }
 
-void DistanceBasedLocalizer::calculate_pose_by_objects(int num)
+void DistanceBasedLocalizer::calculate_pose_by_objects(int num,double probs)
 {
 
     double dx = current_odom.pose.pose.position.x - old_odom.pose.pose.position.x;
@@ -369,25 +372,32 @@ void DistanceBasedLocalizer::calculate_pose_by_objects(int num)
     double dtrans = sqrt(dx * dx + dy * dy);
     //std::round()で整数に四捨五入
     // int per_obj = std::round(probs/obj_num*obj_weight*p_array.size());//particleの何割をobjからの情報にするかobj_weight=1でアキュラシーの平均値をそのまま使うことになる
-    int per_obj = 0.5*p_array.size();
-    // int per_bench = std::round(per_obj*(bench_prob/probs));//accuracy
-    // int per_fire = std::round(per_obj*(fire_prob/probs));//accuracy
-    // int per_big = std::round(per_obj*(big_prob/probs));//accuracy
-    // int per_trash = std::round(per_obj*(trash_prob/probs));//accuracy
+    obj_weight = calculate_obj_weight(num,probs);
+    double per_obj = obj_weight*p_array.size();
+    std::cout << "obj_weeeei:" << obj_weight  <<std::endl;
     // sort(landmark.begin(),landmark.end(),prob_sort();
     std::cout << "num" <<num<<std::endl;
     for(int i=0;i<num;i++)
     {
-        per_prob[i] = std::round(per_obj*(landmark[i].prob/probs));//landmark[i]を使う回数
+        per_prob[i] = per_obj*(landmark[i].prob/probs);//landmark[i]を使う回数
+        // std::cout<<"landmark["<<i<<"].prob"<<landmark[i].prob<<std::endl;
+        // std::cout<<"probs"<<probs<<std::endl;
+        // std::cout<<"per_prob["<<i<<"]"<<per_prob[i]<<std::endl;
     }
 
     int j = 0;
     int per = 0;
-    bool landmark_checker = std::isnan(landmark[j].prob);
-    // std::cout << "dtrans" << dtrans  << std::endl;
+    bool landmark_checker = false;
+    if(landmark[j].prob != 0) landmark_checker = true;
+
+    // std::cout << "lm_checker" << landmark_checker  << std::endl;
     for(auto& p:p_array)
     {
-        if(landmark_checker) p.weight = dtrans*odom;
+        if(!landmark_checker)
+        {
+            p.weight = dtrans*odom;
+            // std::cout<<"weight_odm"<<p.weight<<std::endl;
+        }
 
         else
         {
@@ -400,37 +410,30 @@ void DistanceBasedLocalizer::calculate_pose_by_objects(int num)
             if(landmark[j].name == "big") p.weight = landmark[j].prob*big;//bench = 他のweightとの桁数など調整用
             if(landmark[j].name == "trash") p.weight = landmark[j].prob*trash;//bench = 他のweightとの桁数など調整用
 
+            // std::cout<<"weight_obj"<<p.weight<<std::endl;
             //landmark[j]の使用回数
             per += 1;
-            if(per == per_prob[j])
+            if(per >= per_prob[j])
             {
+                // std::cout<<"weight_obj"<<p.weight<<std::endl;
                 j += 1;
                 per = 0;
-                landmark_checker = std::isnan(landmark[j].prob);
+                if(landmark[j].prob == 0) landmark_checker = false;
+                // landmark_checker = std::isnan(landmark[j].prob);
+                // std::cout << "lm_checker" << landmark_checker  << std::endl;
             }
 
         }
-        //     if(i>=per_bench+per_fire && i<per_fire+per_bench+per_big && per_big!=0)
-        //     {
-        //         p.p_pose.pose.position.x = x_by_big;
-        //         p.p_pose.pose.position.y = y_by_big;
-        //         p.weight = big_prob*big;//bench = 他のweightとの桁数など調整用
-        //     }
-        // }
-        // if(per_trash!=0)
-        // {
-        //     if(i>=per_bench+per_fire+per_big && i<per_fire+per_bench+per_big+per_trash && per_trash!=0)
-        //     {
-        //         p.p_pose.pose.position.x = x_by_trash;
-        //         p.p_pose.pose.position.y = y_by_trash;
-        //         p.weight = trash_prob/trash_num*trash;//bench = 他のweightとの桁数など調整用
-        //     }
-        // }
-
-        // std::cout << "weight" << p.weight << std::endl;
-        // std::cout << p.p_pose.pose.position.x << "," << p.p_pose.pose.position.y << std::endl;
     }
 
+}
+double DistanceBasedLocalizer::calculate_obj_weight(int num,double probs)
+{
+    double wei;
+    double ave_prob = probs/num;
+    wei = num*0.1*ave_prob;
+    if(wei>=1.0) wei = 0.5*wei;
+    return wei;
 }
 
 bool DistanceBasedLocalizer::prob_sort(Objects& land,Objects& mark)
@@ -466,14 +469,15 @@ void DistanceBasedLocalizer::estimate_pose()
         if(p.weight > max_weight)
         {
             max_weight = p.weight;
-            yaw = get_rpy(p.p_pose.pose.orientation);
+            yaw = get_rpy(p.p_pose.pose.orientation) + yaw_init;
         }
     }
 
     db_pose.pose.position.x = x;
     db_pose.pose.position.y = y;
-    get_quat(yaw,db_pose.pose.orientation);
-    std::cout<<"estimate"<<db_pose.pose.position.x<<std::endl;
+    get_quat(yawyaw,db_pose.pose.orientation);
+    // get_quat(yaw,db_pose.pose.orientation);
+    // std::cout<<"estimate"<<db_pose.pose.position.x<<std::endl;
 }
 
 void DistanceBasedLocalizer::calculate_weight(double estimated_weight)
@@ -567,18 +571,10 @@ void DistanceBasedLocalizer::change_flags(geometry_msgs::PoseStamped &current_po
     if((trash_flag <= 0 && current_x > 5.0 && current_y > 2.3) || trash_flag == 1) trash_flag = 1;
     if((trash_flag <= 1 && current_x < 6.3 && current_y > 16.0) || trash_flag == 2) trash_flag = 2;
     if((trash_flag <= 2 && current_x < -4.2 && current_y < 0.0) || trash_flag == 3) trash_flag = 3;
-    // if(nya <= 0  && current_x > 6.0 && current_x < 8.5 && current_y > 8.0 || nya == 1) nya = 1;
-    // if((nya <= 1 && current_x > -6.0 && current_x < 6.0 && current_y > 0.0) || nya ==2) nya = 2;
-    // if((nya <= 2 && current_x > -8.5 && current_x < -6.0 && current_y > 5.0) || nya ==3) nya = 3;
-    // if((nya <= 3 && current_x > -8.5 && current_x < -6.0 && current_y < 5.0 && current_y > -10.0) || nya ==4) nya = 4;
-    // if((nya <= 4 && current_x > -8.5 && current_x < -6.0 && current_y < -10.0 && current_y > -15.5) || nya ==5) nya = 5;
-    // if((nya <= 5 && current_x > -8.5 && current_x < 4.0 && current_y < -15.5) || nya ==6) nya = 6;
-    // if((nya <= 6 && current_x > 4.0 && current_x < 8.5 && current_y < 0.0) || nya ==7) nya = 7;
-    //
-    std::cout << "bench_flag:" << bench_flag << std::endl;
-    std::cout << "fire_flag:" << fire_flag << std::endl;
-    std::cout << "big_flag:" << big_flag << std::endl;
-    std::cout << "trash_flag:" << trash_flag << std::endl;
+    // std::cout << "bench_flag:" << bench_flag << std::endl;
+    // std::cout << "fire_flag:" << fire_flag << std::endl;
+    // std::cout << "big_flag:" << big_flag << std::endl;
+    // std::cout << "trash_flag:" << trash_flag << std::endl;
 }
 
 void DistanceBasedLocalizer::roomba_position()
@@ -589,6 +585,11 @@ void DistanceBasedLocalizer::roomba_position()
 
     pub_front_roomba_pose.publish(front_roomba_pose);
 }
+
+void DistanceBasedLocalizer::make_path(geometry_msgs::PoseStamped &pose)
+{
+}
+
 
 void DistanceBasedLocalizer::process()
 {
@@ -633,6 +634,8 @@ void DistanceBasedLocalizer::process()
             make_poses(p_array);
             pub_db_poses.publish(db_poses);
             pub_db_pose.publish(db_pose);
+
+            // pub_path.publish(roomba_path);
 
             objects_checker = false;
 

@@ -7,6 +7,7 @@
 #include <std_msgs/Header.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <nav_msgs/Odometry.h>
+#include <nav_msgs/Path.h>
 #include <vector>
 #include <cmath>
 #include <random>
@@ -65,7 +66,8 @@ class DistanceBasedLocalizer
         void motion_update();
         void observation_update();
         void calculate_pose_by_odom(int only_odom);
-        void calculate_pose_by_objects(int num);
+        void calculate_pose_by_objects(int num,double probs);
+        double calculate_obj_weight(int num,double probs);
         bool prob_sort(Objects& land,Objects& mark);
         void estimate_pose();
         void calculate_weight(double estimated_weight);
@@ -75,6 +77,7 @@ class DistanceBasedLocalizer
         void change_flags(geometry_msgs::PoseStamped &current_pose);
 
         void roomba_position();
+        void make_path(geometry_msgs::PoseStamped &pose);
 
         double make_dyaw(double yawa,double yawi);
 
@@ -207,6 +210,7 @@ class DistanceBasedLocalizer
         ros::Publisher pub_db_pose;
         ros::Publisher pub_db_poses;
         ros::Publisher pub_front_roomba_pose;
+        ros::Publisher pub_path;
 
         geometry_msgs::PoseStamped db_pose;
         geometry_msgs::PoseArray db_poses;
@@ -216,12 +220,14 @@ class DistanceBasedLocalizer
         nav_msgs::OccupancyGrid map;
         nav_msgs::Odometry current_odom;
         nav_msgs::Odometry old_odom;
+        nav_msgs::Path roomba_path;
 
         object_detector_msgs::ObjectPositions objects;
 
         std::vector<Particle> p_array;
         std::vector<Objects> landmark;
-        std::vector<int> per_prob;
+        // Objects landmark[6];
+        std::vector<double> per_prob;
 
 };
 
