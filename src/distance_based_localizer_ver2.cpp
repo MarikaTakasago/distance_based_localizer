@@ -41,9 +41,9 @@ DistanceBasedLocalizer::DistanceBasedLocalizer():private_nh("~")
     private_nh.getParam("estimated_weight_th",estimated_weight_th);
 
     db_pose.header.frame_id = "map";
-    db_pose.pose.position.x = x_init;
-    db_pose.pose.position.y = y_init;
-    get_quat(yaw_init,db_pose.pose.orientation);
+    // db_pose.pose.position.x = x_init;
+    // db_pose.pose.position.y = y_init;
+    // get_quat(yaw_init,db_pose.pose.orientation);
 
     db_poses.header.frame_id = "map";
     db_poses.poses.reserve(300);
@@ -431,8 +431,8 @@ double DistanceBasedLocalizer::calculate_obj_weight(int num,double probs)
 {
     double wei;
     double ave_prob = probs/num;
-    wei = num*0.1*ave_prob*ave_prob;
-    if(wei>=1.0) wei = 0.5*wei;
+    wei = num*0.1*probs;
+    // if(wei>=1.0) wei = 0.5*wei;
     return wei;
 }
 
