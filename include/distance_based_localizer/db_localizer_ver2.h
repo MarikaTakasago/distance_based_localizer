@@ -80,6 +80,8 @@ class DistanceBasedLocalizer
         void roomba_position();
         void make_path(geometry_msgs::PoseStamped &pose);
         void calculate_score(int num,double probs,geometry_msgs::PoseStamped &current_pose);
+        int xy_map(double x,double y);
+        double road_or_wall(double x,double y);
 
         double make_dyaw(double yawa,double yawi);
 
@@ -178,21 +180,7 @@ class DistanceBasedLocalizer
         double current_x;
         double current_y;
 
-        //kf
-        double sigma_w;
-        double sigma_v;
-        double k_x;
-        double k_y;
-        double forecast_x;
-        double forecast_y;
-        double cur_x;
-        double cur_y;
-        double pre_x;
-        double pre_y;
-        int sum_num;
-        double forecast_p;
-        double p_x;
-        double p_y;
+        std::string roomba_odom;
 
         bool map_checker = false;
         int nya = 0;

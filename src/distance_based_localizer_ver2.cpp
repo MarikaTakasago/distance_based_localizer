@@ -41,6 +41,7 @@ DistanceBasedLocalizer::DistanceBasedLocalizer():private_nh("~")
     private_nh.getParam("yaw_cov_2",yaw_cov_2);
     private_nh.getParam("move_noise",move_noise);
     private_nh.getParam("estimated_weight_th",estimated_weight_th);
+    private_nh.getParam("roomba_odom",roomba_odom);
 
     db_pose.header.frame_id = "map";
     // db_pose.pose.position.x = x_init;
@@ -400,6 +401,8 @@ void DistanceBasedLocalizer::calculate_pose_by_objects(int num,double probs)
         {
             p.weight = dtrans*odom;
             // std::cout<<"weight_odm"<<p.weight<<std::endl;
+            // p.weight = p.weight * road_or_wall(p.p_pose.pose.position.x,p.p_pose.pose.position.y);
+            // if(!isnan(p.p_pose.pose.position.x)) p.weight = dtrans*odom*road_or_wall(p.p_pose.pose.position.x,p.p_pose.pose.position.y);
         }
 
         else
@@ -425,7 +428,13 @@ void DistanceBasedLocalizer::calculate_pose_by_objects(int num,double probs)
                 // landmark_checker = std::isnan(landmark[j].prob);
                 // std::cout << "lm_checker" << landmark_checker  << std::endl;
             }
+            // p.weight = p.weight * road_or_wall(p.p_pose.pose.position.x,p.p_pose.pose.position.y);
 
+        }
+        double w = p.weight;
+        if(!isnan(p.p_pose.pose.position.x))
+        {
+        p.weight = w * road_or_wall(p.p_pose.pose.position.x,p.p_pose.pose.position.y);
         }
     }
 
@@ -452,8 +461,10 @@ void DistanceBasedLocalizer::calculate_pose_by_odom(int only_odom)
     double dtrans = sqrt(dx * dx + dy * dy);
     for(auto& p:p_array)
     {
-        // p.weight = dtrans*odom/(only_odom*10); //odom = 他との兼ね合い　わざと小さくなるように
-        p.weight = dtrans*odom; //odom = 他との兼ね合い　わざと小さくなるように
+        double w = dtrans*odom/(only_odom*10); //odom = 他との兼ね合い　わざと小さくなるように
+        // p.weight = dtrans*odom; //odom = 他との兼ね合い　わざと小さくなるように
+        // p.weight = p.weight * road_or_wall(p.p_pose.pose.position.x,p.p_pose.pose.position.y);
+        if(!isnan(p.p_pose.pose.position.x)) p.weight = w*road_or_wall(p.p_pose.pose.position.x,p.p_pose.pose.position.y);
         // std::cout << "weo:" << p.weight << std::endl;
     }
 }
@@ -571,7 +582,7 @@ void DistanceBasedLocalizer::change_flags(geometry_msgs::PoseStamped &current_po
 
     //trash
     if((current_x > 5.0 && current_y < 2.3) || trash_flag == 0) trash_flag = 0;
-    if((trash_flag <= 0 && current_x > 5.0 && current_y > 2.3) || trash_flag == 1) trash_flag = 1;
+    if((trash_flag <= 0 && current_x > 5.0 && current_y > 2.3 && current_y < 16.0) || trash_flag == 1) trash_flag = 1;
     if((trash_flag <= 1 && current_x < 6.3 && current_y > 16.0) || trash_flag == 2) trash_flag = 2;
     if((trash_flag <= 2 && current_x < -4.2 && current_y < 0.0) || trash_flag == 3) trash_flag = 3;
     // std::cout << "bench_flag:" << bench_flag << std::endl;
@@ -597,7 +608,23 @@ void DistanceBasedLocalizer::calculate_score(int num,double probs,geometry_msgs:
 {
     score.name = roomba_name;
     score.pose = current_pose;
+    // score.pose.header.stamp = ros::Time::now();
     score.score = probs/num;
+}
+int DistanceBasedLocalizer::xy_map(double x,double y)
+{
+    int index_x = floor((x - map.info.origin.position.x)/map.info.resolution);
+    int index_y = floor((y - map.info.origin.position.y)/map.info.resolution);
+    return index_x + index_y*map.info.width;
+}
+
+double DistanceBasedLocalizer::road_or_wall(double x,double y)
+{
+    double wa = 1.0;
+    int index = xy_map(x,y);
+    if(map.data[index] == 100) wa = 0.001;
+    else if(map.data[index] == -1) wa = 0;
+    return wa;
 }
 
 void DistanceBasedLocalizer::process()
@@ -627,7 +654,8 @@ void DistanceBasedLocalizer::process()
                 odom.header.stamp = ros::Time::now();
 
                 odom.header.frame_id = "map";
-                odom.child_frame_id = "odom";
+                // odom.child_frame_id = "odom";
+                odom.child_frame_id = roomba_odom;
 
                 odom.transform.translation.x = x_map_odom;
                 odom.transform.translation.y = y_map_odom;
