@@ -53,7 +53,7 @@ class DistanceBasedLocalizer
         void object_callback(const object_detector_msgs::ObjectPositions::ConstPtr &msg);
         void map_callback(const nav_msgs::OccupancyGrid::ConstPtr &msg);
         void odometry_callback(const nav_msgs::Odometry::ConstPtr &msg);
-        void roomba_callback_1(const geometry_msgs::PoseStamped::ConstPtr &msg);
+        void roomba_callback_1(const distance_based_localizer_msgs::RoombaScore::ConstPtr &msg);
         void kf(double pre_x,double pre_y,double cur_x,double cur_y,int sum_num);
         double get_rpy(const geometry_msgs::Quaternion &q);
         void get_quat(double yaw,geometry_msgs::Quaternion &q);
@@ -79,7 +79,7 @@ class DistanceBasedLocalizer
 
         void roomba_position();
         void make_path(geometry_msgs::PoseStamped &pose);
-        void calculate_score(int num,double probs,geometry_msgs::PoseStamped &current_pose);
+        void calculate_score(int num,double max_weight,geometry_msgs::PoseStamped &current_pose);
         int xy_map(double x,double y);
         double road_or_wall(double x,double y);
 
@@ -88,7 +88,12 @@ class DistanceBasedLocalizer
         //param
 
         int particle_num;
+
+        //score
         int roomba_name;
+        double num_s;
+        double weight_s;
+        double s = 0;
 
         double x_old;
         double y_old;
@@ -196,7 +201,7 @@ class DistanceBasedLocalizer
         ros::Subscriber sub_object;
         ros::Subscriber sub_map;
         ros::Subscriber sub_odometry;
-        ros::Subscriber sub_roomba1;
+        ros::Subscriber sub_roomba_a;
 
         ros::Publisher pub_db_pose;
         ros::Publisher pub_db_poses;
@@ -207,7 +212,7 @@ class DistanceBasedLocalizer
         geometry_msgs::PoseStamped db_pose;
         geometry_msgs::PoseArray db_poses;
         geometry_msgs::PoseStamped front_roomba_pose;
-        geometry_msgs::PoseStamped roomba1_pose;
+        // geometry_msgs::PoseStamped roomba1_pose;
 
         nav_msgs::OccupancyGrid map;
         nav_msgs::Odometry current_odom;
@@ -217,6 +222,7 @@ class DistanceBasedLocalizer
         object_detector_msgs::ObjectPositions objects;
 
         distance_based_localizer_msgs::RoombaScore score;
+        distance_based_localizer_msgs::RoombaScore roomba_a_score;
 
         std::vector<Particle> p_array;
         std::vector<Objects> landmark;

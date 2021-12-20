@@ -8,7 +8,7 @@ DistanceBasedLocalizer::DistanceBasedLocalizer():private_nh("~")
     sub_object = nh.subscribe("/object_positions",100,&DistanceBasedLocalizer::object_callback,this);
     sub_map = nh.subscribe("/map",100,&DistanceBasedLocalizer::map_callback,this);
     sub_odometry = nh.subscribe("/roomba/odometry",100,&DistanceBasedLocalizer::odometry_callback,this);
-    sub_roomba1 = nh.subscribe("/roomba/db_pose",100,&DistanceBasedLocalizer::roomba_callback_1,this);
+    sub_roomba_a = nh.subscribe("/roomba/score",100,&DistanceBasedLocalizer::roomba_callback_1,this);
 
     pub_db_pose = nh.advertise<geometry_msgs::PoseStamped>("/db_pose",100);
     pub_db_poses = nh.advertise<geometry_msgs::PoseArray>("/db_poses",100);
@@ -18,6 +18,8 @@ DistanceBasedLocalizer::DistanceBasedLocalizer():private_nh("~")
 
     private_nh.getParam("particle_num",particle_num);
     private_nh.getParam("roomba_name",roomba_name);
+    private_nh.getParam("num_s",num_s);
+    private_nh.getParam("weight_s",weight_s);
     private_nh.getParam("x_init",x_init);
     private_nh.getParam("y_init",y_init);
     private_nh.getParam("yaw_init",yaw_init);
@@ -122,11 +124,12 @@ void DistanceBasedLocalizer::motion_update()
         calculate_pose_by_odom(only_odom);
         estimate_pose();
         calculate_weight(max_weight);
+        // calculate_score();
     }
 }
-void DistanceBasedLocalizer::roomba_callback_1(const geometry_msgs::PoseStamped::ConstPtr& msg)
+void DistanceBasedLocalizer::roomba_callback_1(const distance_based_localizer_msgs::RoombaScore::ConstPtr& msg)
 {
-    roomba1_pose = *msg;
+    roomba_a_score = *msg;
 }
 
 void DistanceBasedLocalizer::object_callback(const object_detector_msgs::ObjectPositions::ConstPtr& msg)
@@ -339,24 +342,30 @@ void DistanceBasedLocalizer::observation_update()
                 landmark[i].x = 3.0 - dist*cos(theta);
                 landmark[i].y = -15.5 - dist*sin(theta);
            }
-                landmark[i].prob = object.probability;
-                obj_num += 1;
+           landmark[i].prob = object.probability;
+           obj_num += 1;
            probs += object.probability;
 
-                trash_num += 1;
+           trash_num += 1;
       }
 
-       if(object.Class == "roomba" && (dist < 4.0 || object.probability > 0.99))
+       if(object.Class == "roomba" && ((dist > 3.0 && dist < 10.0 ) && object.probability > 0.99))
        {
-           roomba1_checker = true;
-           // std::cout << "roomba" << std::endl;
-           roomba_dist_x = dist*cos(theta);
-           roomba_dist_y = dist*sin(theta);
+           if(roomba_a_score.score > s)
+           {
+               roomba1_checker = true;
+               landmark[i].name = "roomba";
+               roomba_dist_x = dist*cos(theta);
+               roomba_dist_y = dist*sin(theta);
 
-           x_by_roomba1 = roomba1_pose.pose.position.x - roomba_dist_x;
-           y_by_roomba1 = roomba1_pose.pose.position.y - roomba_dist_y;
 
-           roomba1_prob = object.probability;
+               landmark[i].x = roomba_a_score.pose.pose.position.x - roomba_dist_x;
+               landmark[i].y = roomba_a_score.pose.pose.position.y - roomba_dist_y;
+
+               landmark[i].prob = object.probability;
+               obj_num += 1;
+               probs += object.probability;
+           }
        }
 
        i += 1;
@@ -365,6 +374,7 @@ void DistanceBasedLocalizer::observation_update()
     calculate_pose_by_objects(i,probs);
     estimate_pose();
     calculate_weight(max_weight);
+    // calculate_score();
     // std::cout << "observation" << std::endl;
 }
 
@@ -415,6 +425,7 @@ void DistanceBasedLocalizer::calculate_pose_by_objects(int num,double probs)
             if(landmark[j].name == "fire") p.weight = landmark[j].prob*fire;//bench = 他のweightとの桁数など調整用
             if(landmark[j].name == "big") p.weight = landmark[j].prob*big;//bench = 他のweightとの桁数など調整用
             if(landmark[j].name == "trash") p.weight = landmark[j].prob*trash;//bench = 他のweightとの桁数など調整用
+            if(landmark[j].name == "roomba") p.weight = landmark[j].prob*roomba_a_score.score;//bench = 他のweightとの桁数など調整用
 
             // std::cout<<"weight_obj"<<p.weight<<std::endl;
             //landmark[j]の使用回数
@@ -604,12 +615,12 @@ void DistanceBasedLocalizer::make_path(geometry_msgs::PoseStamped &pose)
 {
 }
 
-void DistanceBasedLocalizer::calculate_score(int num,double probs,geometry_msgs::PoseStamped &current_pose)
+void DistanceBasedLocalizer::calculate_score(int num,double max_weight,geometry_msgs::PoseStamped &current_pose)
 {
     score.name = roomba_name;
     score.pose = current_pose;
-    // score.pose.header.stamp = ros::Time::now();
-    score.score = probs/num;
+    score.score = num_s*num + weight_s*max_weight;
+    s = score.score;
 }
 int DistanceBasedLocalizer::xy_map(double x,double y)
 {
@@ -671,7 +682,7 @@ void DistanceBasedLocalizer::process()
             make_poses(p_array);
             pub_db_poses.publish(db_poses);
             pub_db_pose.publish(db_pose);
-            calculate_score(obj_num,probs,db_pose);
+            calculate_score(obj_num,max_weight,db_pose);
             pub_score.publish(score);
 
             // pub_path.publish(roomba_path);
