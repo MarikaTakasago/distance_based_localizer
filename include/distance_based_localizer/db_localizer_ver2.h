@@ -46,6 +46,7 @@ class DistanceBasedLocalizer
                 double prob;
                 double x;
                 double y;
+                double sigma;
                 int flag = 0;
         };
 
@@ -78,7 +79,7 @@ class DistanceBasedLocalizer
         void change_flags(geometry_msgs::PoseStamped &current_pose);
 
         void roomba_position();
-        void make_path(geometry_msgs::PoseStamped &pose);
+        void make_path(nav_msgs::Path &path);
         void calculate_score(int num,double max_weight,geometry_msgs::PoseStamped &current_pose);
         int xy_map(double x,double y);
         double road_or_wall(double x,double y);
@@ -117,6 +118,7 @@ class DistanceBasedLocalizer
         double y_by_obj;
         double roomba_dist_x;
         double roomba_dist_y;
+        double roomba_dist;
 
         Objects Bench;
         Objects Fire;
@@ -218,6 +220,7 @@ class DistanceBasedLocalizer
         nav_msgs::Odometry current_odom;
         nav_msgs::Odometry old_odom;
         nav_msgs::Path roomba_path;
+        nav_msgs::Path mini_path;
 
         object_detector_msgs::ObjectPositions objects;
 

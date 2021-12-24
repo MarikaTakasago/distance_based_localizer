@@ -53,6 +53,9 @@ DistanceBasedLocalizer::DistanceBasedLocalizer():private_nh("~")
     db_poses.header.frame_id = "map";
     db_poses.poses.reserve(300);
 
+    mini_path.header.frame_id = "map";
+    roomba_path.header.frame_id = "map";
+
     p_array.reserve(300);
 
     landmark.reserve(30);
@@ -249,6 +252,9 @@ void DistanceBasedLocalizer::observation_update()
        if(object.Class == "bench" && dist < 4.0)
        {
            landmark[i].name = "bench";
+           double gyaku = 1/dist;
+           double sigma = 4.0*gyaku*0.01;
+           landmark[i].sigma = sigma;
 
            if(bench_flag ==0)
            {
@@ -270,6 +276,10 @@ void DistanceBasedLocalizer::observation_update()
        if(object.Class == "fire_hydrant" && dist < 5.0)
        {
            landmark[i].name = "fire";
+           double gyaku = 1/dist;
+           double sigma = 5.0*gyaku*0.01;
+           landmark[i].sigma = sigma;
+
            // if(old_x < 10 && old_x > 0 && old_y > 0)
            if(fire_flag == 0)
            {
@@ -313,6 +323,9 @@ void DistanceBasedLocalizer::observation_update()
            landmark[i].x = -5.0 - dist*cos(theta);
            landmark[i].y = -19.0 - dist*sin(theta);
            landmark[i].prob = object.probability;
+           double gyaku = 1/dist;
+           double sigma = 4.0*gyaku*0.01;
+           landmark[i].sigma = sigma;
            obj_num += 1;
            probs += object.probability;
 
@@ -322,6 +335,9 @@ void DistanceBasedLocalizer::observation_update()
        {
            landmark[i].name = "trash";
            // if(old_x > 0 && old_y < 0)
+           double gyaku = 1/dist;
+           double sigma = 5.0*gyaku*0.01;
+           landmark[i].sigma = sigma;
            if(trash_flag == 0)
            {
                 landmark[i].x = 5.2 - dist*cos(theta);
@@ -349,19 +365,23 @@ void DistanceBasedLocalizer::observation_update()
            trash_num += 1;
       }
 
-       if(object.Class == "roomba" && ((dist > 3.0 && dist < 10.0 ) && object.probability > 0.99))
+       if(object.Class == "roomba" && ((dist > 3.0 && dist < 15.0 ) && object.probability > 0.99))
        {
+           // roomba_dist_x = dist*cos(theta);
+           // roomba_dist_y = dist*sin(theta);
+           roomba1_checker = true;
+           roomba_dist_x = dist*cos(theta)-4.0;
+           roomba_dist_y = dist*sin(theta)-5.0;
+
+           double gyaku = 1/dist;
+           double sigma = 15*gyaku*0.01;
+           landmark[i].sigma = sigma;
            if(roomba_a_score.score > s)
            {
-               roomba1_checker = true;
+               // roomba1_checker = true;
                landmark[i].name = "roomba";
-               roomba_dist_x = dist*cos(theta);
-               roomba_dist_y = dist*sin(theta);
-
-
                landmark[i].x = roomba_a_score.pose.pose.position.x - roomba_dist_x;
                landmark[i].y = roomba_a_score.pose.pose.position.y - roomba_dist_y;
-
                landmark[i].prob = object.probability;
                obj_num += 1;
                probs += object.probability;
@@ -388,9 +408,9 @@ void DistanceBasedLocalizer::calculate_pose_by_objects(int num,double probs)
     // int per_obj = std::round(probs/obj_num*obj_weight*p_array.size());//particleの何割をobjからの情報にするかobj_weight=1でアキュラシーの平均値をそのまま使うことになる
     obj_weight = calculate_obj_weight(num,probs);
     double per_obj = obj_weight*p_array.size();
-    std::cout << "obj_weeeei:" << obj_weight  <<std::endl;
+    // std::cout << "obj_weeeei:" << obj_weight  <<std::endl;
     // sort(landmark.begin(),landmark.end(),prob_sort();
-    std::cout << "num" <<num<<std::endl;
+    // std::cout << "num" <<num<<std::endl;
     for(int i=0;i<num;i++)
     {
         per_prob[i] = per_obj*(landmark[i].prob/probs);//landmark[i]を使う回数
@@ -417,8 +437,8 @@ void DistanceBasedLocalizer::calculate_pose_by_objects(int num,double probs)
 
         else
         {
-            p.p_pose.pose.position.x = landmark[j].x;
-            p.p_pose.pose.position.y = landmark[j].y;
+            p.p_pose.pose.position.x = make_gaussian(landmark[j].x,landmark[j].sigma);
+            p.p_pose.pose.position.y = make_gaussian(landmark[j].y,landmark[j].sigma);
 
             //weight
             if(landmark[j].name == "bench") p.weight =landmark[j].prob*bench;//bench = 他のweightとの桁数など調整用
@@ -455,7 +475,7 @@ double DistanceBasedLocalizer::calculate_obj_weight(int num,double probs)
     double wei;
     double ave_prob = probs/num;
     wei = num*0.1*probs;
-    // if(wei>=1.0) wei = 0.5*wei;
+    if(wei>=1.0) wei = 0.5*wei;
     return wei;
 }
 
@@ -604,15 +624,25 @@ void DistanceBasedLocalizer::change_flags(geometry_msgs::PoseStamped &current_po
 
 void DistanceBasedLocalizer::roomba_position()
 {
-    front_roomba_pose.header.frame_id = "map";
-    front_roomba_pose.pose.position.x = db_pose.pose.position.x + roomba_dist_x;
-    front_roomba_pose.pose.position.y = db_pose.pose.position.y + roomba_dist_y;
+    if(roomba1_checker)
+    {
+        front_roomba_pose.header.frame_id = "map";
+        front_roomba_pose.pose.position.x = db_pose.pose.position.x + roomba_dist_x;
+        front_roomba_pose.pose.position.y = db_pose.pose.position.y + roomba_dist_y;
 
-    pub_front_roomba_pose.publish(front_roomba_pose);
+        pub_front_roomba_pose.publish(front_roomba_pose);
+    }
+    roomba1_checker = false;
 }
 
-void DistanceBasedLocalizer::make_path(geometry_msgs::PoseStamped &pose)
+void DistanceBasedLocalizer::make_path(nav_msgs::Path &path)
 {
+    // std::cout << "make_path" << std::endl;
+    std::reverse(path.poses.begin(),path.poses.end());
+    roomba_path.poses.insert(roomba_path.poses.end(),path.poses.begin(),path.poses.end());
+    pub_path.publish(roomba_path);
+    std::cout << "path" << roomba_path.poses[0].pose.position.x<< std::endl;
+    mini_path.poses.clear();
 }
 
 void DistanceBasedLocalizer::calculate_score(int num,double max_weight,geometry_msgs::PoseStamped &current_pose)
@@ -641,6 +671,7 @@ double DistanceBasedLocalizer::road_or_wall(double x,double y)
 void DistanceBasedLocalizer::process()
 {
     tf::TransformBroadcaster odom_broadcaster;
+    int path = 0;
 
     ros::Rate rate(10);
     while(ros::ok())
@@ -684,13 +715,17 @@ void DistanceBasedLocalizer::process()
             pub_db_pose.publish(db_pose);
             calculate_score(obj_num,max_weight,db_pose);
             pub_score.publish(score);
-
             // pub_path.publish(roomba_path);
+            // std::cout << make_gaussian(8,0.05) << std::endl;
 
             objects_checker = false;
 
             change_flags(db_pose);
+            mini_path.poses.push_back(db_pose);
+            if(path%100 == 50) make_path(mini_path);
+
             roomba_position();
+            path += 1;
         }
         ros::spinOnce();
         rate.sleep();
