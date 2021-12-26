@@ -486,7 +486,7 @@ bool DistanceBasedLocalizer::prob_sort(Objects& land,Objects& mark)
 
 void DistanceBasedLocalizer::calculate_pose_by_odom(int only_odom)
 {
-    // std::cout<<"by_odom" << std::endl;
+    std::cout<<"by_odom" << std::endl;
     double dx = current_odom.pose.pose.position.x - old_odom.pose.pose.position.x;
     double dy = current_odom.pose.pose.position.y - old_odom.pose.pose.position.y;
     double dtrans = sqrt(dx * dx + dy * dy);
@@ -638,25 +638,10 @@ void DistanceBasedLocalizer::roomba_position()
 void DistanceBasedLocalizer::make_path(nav_msgs::Path &path)
 {
     // std::cout << "make_path" << std::endl;
-    // nav_msgs::Path new_path;
-    // new_path.header.frame_id = "map";
     std::reverse(path.poses.begin(),path.poses.end());
-    // path = new_path;
-    int i = 0;
-    // int j = 0;
-    for(auto &pth : path.poses)
-    {
-        bool path_nan_checker = isnan(pth.pose.position.x);
-        if(!path_nan_checker) i = 1;
-    }
-    if(i == 1)
-    {
-        std::reverse(path.poses.begin(),path.poses.end());
-        roomba_path.poses.insert(roomba_path.poses.end(),path.poses.begin(),path.poses.end());
-        pub_path.publish(roomba_path);
-        std::cout << "path" << roomba_path.poses.size()<< std::endl;
-        // std::cout << "path" << roomba_path.poses[0].pose.position.x<< std::endl;
-    }
+    roomba_path.poses.insert(roomba_path.poses.end(),path.poses.begin(),path.poses.end());
+    pub_path.publish(roomba_path);
+    std::cout << "path" << roomba_path.poses[0].pose.position.x<< std::endl;
     mini_path.poses.clear();
 }
 
@@ -687,7 +672,6 @@ void DistanceBasedLocalizer::process()
 {
     tf::TransformBroadcaster odom_broadcaster;
     int path = 0;
-    mini_path.poses.clear();
 
     ros::Rate rate(10);
     while(ros::ok())
@@ -738,11 +722,7 @@ void DistanceBasedLocalizer::process()
 
             change_flags(db_pose);
             mini_path.poses.push_back(db_pose);
-            if(path%100 == 50)
-            {
-                std::cout << path << std::endl;
-                make_path(mini_path);
-            }
+            if(path%100 == 50) make_path(mini_path);
 
             roomba_position();
             path += 1;
