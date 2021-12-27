@@ -648,6 +648,7 @@ void DistanceBasedLocalizer::make_path(nav_msgs::Path &path)
     {
         bool path_nan_checker = isnan(pth.pose.position.x);
         if(!path_nan_checker) i = 1;
+        if(path_nan_checker) i = 0;
     }
     if(i == 1)
     {
