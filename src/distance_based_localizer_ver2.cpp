@@ -365,29 +365,29 @@ void DistanceBasedLocalizer::observation_update()
            trash_num += 1;
       }
 
-       if(object.Class == "roomba" && ((dist > 3.0 && dist < 15.0 ) && object.probability > 0.99))
-       {
-           // roomba_dist_x = dist*cos(theta);
-           // roomba_dist_y = dist*sin(theta);
-           roomba1_checker = true;
-           roomba_dist_x = dist*cos(theta)-4.0;
-           roomba_dist_y = dist*sin(theta)-5.0;
-
-           double gyaku = 1/dist;
-           double sigma = 15*gyaku*0.01;
-           landmark[i].sigma = sigma;
-           if(roomba_a_score.score > s)
-           {
-               // roomba1_checker = true;
-               landmark[i].name = "roomba";
-               landmark[i].x = roomba_a_score.pose.pose.position.x - roomba_dist_x;
-               landmark[i].y = roomba_a_score.pose.pose.position.y - roomba_dist_y;
-               landmark[i].prob = object.probability;
-               obj_num += 1;
-               probs += object.probability;
-           }
-       }
-
+       // if(object.Class == "roomba" && ((dist > 3.0 && dist < 15.0 ) && object.probability > 0.99))
+       // {
+       //     // roomba_dist_x = dist*cos(theta);
+       //     // roomba_dist_y = dist*sin(theta);
+       //     roomba1_checker = true;
+       //     roomba_dist_x = dist*cos(theta)-4.0;
+       //     roomba_dist_y = dist*sin(theta)-5.0;
+       //
+       //     double gyaku = 1/dist;
+       //     double sigma = 15*gyaku*0.01;
+       //     landmark[i].sigma = sigma;
+       //     if(roomba_a_score.score > s)
+       //     {
+       //         // roomba1_checker = true;
+       //         landmark[i].name = "roomba";
+       //         landmark[i].x = roomba_a_score.pose.pose.position.x - roomba_dist_x;
+       //         landmark[i].y = roomba_a_score.pose.pose.position.y - roomba_dist_y;
+       //         landmark[i].prob = object.probability;
+       //         obj_num += 1;
+       //         probs += object.probability;
+       //     }
+       // }
+       //
        i += 1;
     }
 
@@ -655,8 +655,7 @@ void DistanceBasedLocalizer::make_path(nav_msgs::Path &path)
         std::reverse(path.poses.begin(),path.poses.end());
         roomba_path.poses.insert(roomba_path.poses.end(),path.poses.begin(),path.poses.end());
         pub_path.publish(roomba_path);
-        std::cout << "path" << roomba_path.poses.size()<< std::endl;
-        // std::cout << "path" << roomba_path.poses[0].pose.position.x<< std::endl;
+        // std::cout << "path" << roomba_path.poses.size()<< std::endl;
     }
     mini_path.poses.clear();
 }
@@ -732,18 +731,12 @@ void DistanceBasedLocalizer::process()
             pub_db_pose.publish(db_pose);
             calculate_score(obj_num,max_weight,db_pose);
             pub_score.publish(score);
-            // pub_path.publish(roomba_path);
-            // std::cout << make_gaussian(8,0.05) << std::endl;
 
             objects_checker = false;
 
             change_flags(db_pose);
             mini_path.poses.push_back(db_pose);
-            if(path%100 == 50)
-            {
-                std::cout << path << std::endl;
-                make_path(mini_path);
-            }
+            make_path(mini_path);
 
             roomba_position();
             path += 1;
