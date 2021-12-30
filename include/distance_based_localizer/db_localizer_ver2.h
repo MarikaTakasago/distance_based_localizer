@@ -169,7 +169,7 @@ class DistanceBasedLocalizer
         double alpha_fast_th;
         double estimated_weight_th;
         double max_weight;
-        int reset;
+        int reset = 0;
         int limit;
 
         double move_noise;

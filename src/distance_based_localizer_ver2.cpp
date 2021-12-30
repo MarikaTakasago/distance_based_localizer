@@ -253,7 +253,7 @@ void DistanceBasedLocalizer::observation_update()
        {
            landmark[i].name = "bench";
            double gyaku = 1/dist;
-           double sigma = 4.0*gyaku*0.01;
+           double sigma = 4.0*gyaku*0.05;
            landmark[i].sigma = sigma;
 
            if(bench_flag ==0)
@@ -277,7 +277,7 @@ void DistanceBasedLocalizer::observation_update()
        {
            landmark[i].name = "fire";
            double gyaku = 1/dist;
-           double sigma = 5.0*gyaku*0.01;
+           double sigma = 5.0*gyaku*0.05;
            landmark[i].sigma = sigma;
 
            // if(old_x < 10 && old_x > 0 && old_y > 0)
@@ -324,7 +324,7 @@ void DistanceBasedLocalizer::observation_update()
            landmark[i].y = -19.0 - dist*sin(theta);
            landmark[i].prob = object.probability;
            double gyaku = 1/dist;
-           double sigma = 4.0*gyaku*0.01;
+           double sigma = 4.0*gyaku*0.05;
            landmark[i].sigma = sigma;
            obj_num += 1;
            probs += object.probability;
@@ -336,7 +336,7 @@ void DistanceBasedLocalizer::observation_update()
            landmark[i].name = "trash";
            // if(old_x > 0 && old_y < 0)
            double gyaku = 1/dist;
-           double sigma = 5.0*gyaku*0.01;
+           double sigma = 5.0*gyaku*0.05;
            landmark[i].sigma = sigma;
            if(trash_flag == 0)
            {
@@ -365,29 +365,29 @@ void DistanceBasedLocalizer::observation_update()
            trash_num += 1;
       }
 
-       // if(object.Class == "roomba" && ((dist > 3.0 && dist < 15.0 ) && object.probability > 0.99))
-       // {
-       //     // roomba_dist_x = dist*cos(theta);
-       //     // roomba_dist_y = dist*sin(theta);
-       //     roomba1_checker = true;
-       //     roomba_dist_x = dist*cos(theta)-4.0;
-       //     roomba_dist_y = dist*sin(theta)-5.0;
-       //
-       //     double gyaku = 1/dist;
-       //     double sigma = 15*gyaku*0.01;
-       //     landmark[i].sigma = sigma;
-       //     if(roomba_a_score.score > s)
-       //     {
-       //         // roomba1_checker = true;
-       //         landmark[i].name = "roomba";
-       //         landmark[i].x = roomba_a_score.pose.pose.position.x - roomba_dist_x;
-       //         landmark[i].y = roomba_a_score.pose.pose.position.y - roomba_dist_y;
-       //         landmark[i].prob = object.probability;
-       //         obj_num += 1;
-       //         probs += object.probability;
-       //     }
-       // }
-       //
+       if(object.Class == "roomba" && dist < 6.0 && dist > 0.0 && object.probability > 0.99)
+       {
+           // roomba_dist_x = dist*cos(theta);
+           // roomba_dist_y = dist*sin(theta);
+           roomba1_checker = true;
+           roomba_dist_x = dist*cos(theta);
+           roomba_dist_y = dist*sin(theta);
+
+           double gyaku = 1/dist;
+           double sigma = 6*gyaku*0.01;
+           landmark[i].sigma = sigma;
+           if(roomba_a_score.score > s)
+           {
+               // roomba1_checker = true;
+               landmark[i].name = "roomba";
+               landmark[i].x = roomba_a_score.pose.pose.position.x - roomba_dist_x;
+               landmark[i].y = roomba_a_score.pose.pose.position.y - roomba_dist_y;
+               landmark[i].prob = object.probability*roomba_a_score.score;
+               obj_num += 1;
+               probs += object.probability;
+           }
+       }
+
        i += 1;
     }
 
@@ -439,6 +439,8 @@ void DistanceBasedLocalizer::calculate_pose_by_objects(int num,double probs)
         {
             p.p_pose.pose.position.x = make_gaussian(landmark[j].x,landmark[j].sigma);
             p.p_pose.pose.position.y = make_gaussian(landmark[j].y,landmark[j].sigma);
+            double yaw_by_obj = make_gaussian(yawyaw,landmark[j].sigma*0.01);
+            get_quat(yaw_by_obj,p.p_pose.pose.orientation);
 
             //weight
             if(landmark[j].name == "bench") p.weight =landmark[j].prob*bench;//bench = 他のweightとの桁数など調整用
@@ -507,6 +509,7 @@ void DistanceBasedLocalizer::estimate_pose()
     double y = 0;
     double yaw = 0;
     max_weight = 0;
+    double min_weight = 1;
     for(auto& p:p_array)
     {
         x += p.p_pose.pose.position.x * p.weight;
@@ -514,14 +517,16 @@ void DistanceBasedLocalizer::estimate_pose()
         if(p.weight > max_weight)
         {
             max_weight = p.weight;
-            yaw = get_rpy(p.p_pose.pose.orientation) + yaw_init;
+            yaw = get_rpy(p.p_pose.pose.orientation);
         }
+        // if(p.weight < min_weight) min_weight = p.weight;
     }
 
+    // std::cout << "min_weight:" << min_weight <<std::endl;
     db_pose.pose.position.x = x;
     db_pose.pose.position.y = y;
-    get_quat(yawyaw,db_pose.pose.orientation);
-    // get_quat(yaw,db_pose.pose.orientation);
+    // get_quat(yawyaw,db_pose.pose.orientation);
+    get_quat(yaw,db_pose.pose.orientation);
     // std::cout<<"estimate"<<db_pose.pose.position.x<<std::endl;
 }
 
@@ -542,6 +547,7 @@ void DistanceBasedLocalizer::calculate_weight(double estimated_weight)
         reset += 1;
         expansion_reset();
     }
+    std::cout <<"reset" << reset << std::endl;
 }
 
 void DistanceBasedLocalizer::adaptive_resampling()
@@ -664,7 +670,7 @@ void DistanceBasedLocalizer::calculate_score(int num,double max_weight,geometry_
 {
     score.name = roomba_name;
     score.pose = current_pose;
-    score.score = num_s*num + weight_s*max_weight;
+    score.score = num_s*num + weight_s*max_weight + probs/num;
     s = score.score;
 }
 int DistanceBasedLocalizer::xy_map(double x,double y)
@@ -726,9 +732,10 @@ void DistanceBasedLocalizer::process()
                 ROS_ERROR("%s",ex.what());
             }
 
+
             make_poses(p_array);
-            pub_db_poses.publish(db_poses);
-            pub_db_pose.publish(db_pose);
+            if(!isnan(db_poses.poses[0].position.x) || !isnan(db_poses.poses[0].position.y)) pub_db_poses.publish(db_poses);
+            if(!isnan(db_pose.pose.position.x) || !isnan(db_pose.pose.position.y)) pub_db_pose.publish(db_pose);
             calculate_score(obj_num,max_weight,db_pose);
             pub_score.publish(score);
 
