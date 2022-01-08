@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   object_detector_msgs
   distance_based_localizer_msgs
+  evaluation_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -140,7 +141,8 @@ include_directories(
 # add_executable(${PROJECT_NAME}_node src/distance_based_localizer_node.cpp)
 add_executable(distance_based_localizer src/distance_based_localizer.cpp)
 add_executable(distance_based_localizer_ver2 src/distance_based_localizer_ver2.cpp)
-add_executable(distance_based_localizer_ver3 src/distance_based_localizer_ver2.cpp)
+# add_executable(distance_based_localizer_ver3 src/distance_based_localizer_ver3.cpp)
+add_executable(evaluation src/evaluation.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -153,7 +155,8 @@ add_executable(distance_based_localizer_ver3 src/distance_based_localizer_ver2.c
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(distance_based_localizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(distance_based_localizer_ver2 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(distance_based_localizer_ver3 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(distance_based_localizer_ver3 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(evaluation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
@@ -162,7 +165,8 @@ add_dependencies(distance_based_localizer_ver3 ${${PROJECT_NAME}_EXPORTED_TARGET
 
 target_link_libraries(distance_based_localizer ${catkin_LIBRARIES})
 target_link_libraries(distance_based_localizer_ver2 ${catkin_LIBRARIES})
-target_link_libraries(distance_based_localizer_ver3 ${catkin_LIBRARIES})
+# target_link_libraries(distance_based_localizer_ver3 ${catkin_LIBRARIES})
+target_link_libraries(evaluation ${catkin_LIBRARIES})
 
 #############
 ## Install ##

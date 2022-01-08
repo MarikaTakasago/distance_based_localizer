@@ -4,6 +4,7 @@
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PoseArray.h>
+#include <geometry_msgs/PointStamped.h>
 #include <std_msgs/Header.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <nav_msgs/Odometry.h>
@@ -55,6 +56,7 @@ class DistanceBasedLocalizer
         void map_callback(const nav_msgs::OccupancyGrid::ConstPtr &msg);
         void odometry_callback(const nav_msgs::Odometry::ConstPtr &msg);
         void roomba_callback_1(const distance_based_localizer_msgs::RoombaScore::ConstPtr &msg);
+        void roomba_callback_2(const distance_based_localizer_msgs::RoombaScore::ConstPtr &msg);
         void kf(double pre_x,double pre_y,double cur_x,double cur_y,int sum_num);
         double get_rpy(const geometry_msgs::Quaternion &q);
         void get_quat(double yaw,geometry_msgs::Quaternion &q);
@@ -71,6 +73,7 @@ class DistanceBasedLocalizer
         void calculate_pose_by_objects(int num,double probs);
         double calculate_obj_weight(int num,double probs);
         bool prob_sort(Objects& land,Objects& mark);
+        void expansion_resetting(double x,double y,double wa);
         void estimate_pose();
         void calculate_weight(double estimated_weight);
         void adaptive_resampling();
@@ -187,6 +190,10 @@ class DistanceBasedLocalizer
         double current_x;
         double current_y;
 
+        double behind_x = 0;
+        double behind_y = 0;
+        double behind_score = 0;
+
         std::string roomba_odom;
 
         bool map_checker = false;
@@ -194,6 +201,9 @@ class DistanceBasedLocalizer
         bool objects_checker = false;
         bool odom_checker = false;
         bool roomba1_checker = false;
+        bool behind_roomba_checker = false;
+        bool is_move = false;
+        bool is_only_odom = false; //比較用
 
 
         //member
@@ -204,6 +214,7 @@ class DistanceBasedLocalizer
         ros::Subscriber sub_map;
         ros::Subscriber sub_odometry;
         ros::Subscriber sub_roomba_a;
+        ros::Subscriber sub_roomba_b;
 
         ros::Publisher pub_db_pose;
         ros::Publisher pub_db_poses;
@@ -213,7 +224,7 @@ class DistanceBasedLocalizer
 
         geometry_msgs::PoseStamped db_pose;
         geometry_msgs::PoseArray db_poses;
-        geometry_msgs::PoseStamped front_roomba_pose;
+        geometry_msgs::PointStamped front_roomba_pose;
         // geometry_msgs::PoseStamped roomba1_pose;
 
         nav_msgs::OccupancyGrid map;
@@ -226,6 +237,7 @@ class DistanceBasedLocalizer
 
         distance_based_localizer_msgs::RoombaScore score;
         distance_based_localizer_msgs::RoombaScore roomba_a_score;
+        distance_based_localizer_msgs::RoombaScore roomba_b_score;
 
         std::vector<Particle> p_array;
         std::vector<Objects> landmark;

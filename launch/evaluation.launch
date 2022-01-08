@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+
+<launch>
+    <arg name="rec_bag_name" default=""/>
+    <arg name="roomba" default=""/>
+
+    <node pkg="distance_based_localizer" type="evaluation" name="evaluation$(arg roomba)">
+        <param name="roomba_num" value="$(arg roomba)" type="int"/>
+        <remap from="/roomba/mcl_pose" to="/roomba$(arg roomba)/mcl_pose"/>
+        <remap from="/roomba/db_pose" to="/roomba$(arg roomba)/db_pose"/>
+        <remap from="/eva" to="/roomba$(arg roomba)/eva"/>
+    </node>
+
+    <node pkg="rosbag" type="record" name="record$(arg roomba)" args="-O /home/amsl/bagfiles/results/$(arg rec_bag_name).bag /roomba$(arg roomba)/eva" />
+
+</launch>
