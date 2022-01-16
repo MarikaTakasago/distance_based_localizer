@@ -47,6 +47,7 @@ class DistanceBasedLocalizer
                 double prob;
                 double x;
                 double y;
+                double yaw;
                 double sigma;
                 int flag = 0;
         };
@@ -86,6 +87,8 @@ class DistanceBasedLocalizer
         void calculate_score(int num,double max_weight,geometry_msgs::PoseStamped &current_pose);
         int xy_map(double x,double y);
         double road_or_wall(double x,double y);
+        double dist_from_wall(double x,double y,double yaw);
+        double calculate_delta(geometry_msgs::PoseStamped pose,double x,double y);
 
         double make_dyaw(double yawa,double yawi);
 
@@ -97,8 +100,10 @@ class DistanceBasedLocalizer
         int roomba_name;
         double num_s;
         double weight_s;
-        double s = 0;
+        double s;
+        double probs_for_score;
 
+        //odom
         double x_old;
         double y_old;
         double yaw_old;
@@ -113,6 +118,7 @@ class DistanceBasedLocalizer
         double dtrans;
         int only_odom;
 
+        //object
         double theta;
         double dist;
         int obj_num; //num of landmark
@@ -122,6 +128,8 @@ class DistanceBasedLocalizer
         double roomba_dist_x;
         double roomba_dist_y;
         double roomba_dist;
+        int roomba_num;
+        double front_th; //以上だったらそのルンバの位置使う
 
         Objects Bench;
         Objects Fire;
@@ -164,7 +172,9 @@ class DistanceBasedLocalizer
 
         double yaw;
         double yawyaw;
+        double weights_max;
 
+        //calc_weight
         double alpha = 0;
         double alpha_slow;
         double alpha_fast;
@@ -177,6 +187,7 @@ class DistanceBasedLocalizer
 
         double move_noise;
 
+        //covariance
         double x_cov_init;
         double y_cov_init;
         double yaw_cov_init;
@@ -190,9 +201,12 @@ class DistanceBasedLocalizer
         double current_x;
         double current_y;
 
+        //behind_info
         double behind_x = 0;
         double behind_y = 0;
         double behind_score = 0;
+        double behind_yaw;
+        double behind_th; //以下になったら後ろのルンバの位置もらう
 
         std::string roomba_odom;
 
@@ -223,6 +237,7 @@ class DistanceBasedLocalizer
         ros::Publisher pub_score;
 
         geometry_msgs::PoseStamped db_pose;
+        geometry_msgs::PoseStamped old_pose;
         geometry_msgs::PoseArray db_poses;
         geometry_msgs::PointStamped front_roomba_pose;
         // geometry_msgs::PoseStamped roomba1_pose;

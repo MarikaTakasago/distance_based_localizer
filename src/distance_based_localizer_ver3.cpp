@@ -100,6 +100,7 @@ void DistanceBasedLocalizer::odometry_callback(const nav_msgs::Odometry::ConstPt
         motion_update();
         // std::cout<<"cal"<<p_array.size()<<std::endl;
         yawyaw = get_rpy(current_odom.pose.pose.orientation) + M_PI/2;
+        if(!isnan(get_rpy(old_pose.pose.orientation)) && weights_max > 0.5) yawyaw = get_rpy(old_pose.pose.orientation);
    }
 }
 double DistanceBasedLocalizer::make_dyaw(double yawa,double yawi)
@@ -220,9 +221,15 @@ void DistanceBasedLocalizer::param_reset()
 
 void DistanceBasedLocalizer::normalize_ps(std::vector<Particle> &p_array)
 {
+    weights_max = 0.0;
     double i = 0;
-    for(auto& p:p_array) i += p.weight;
+    for(auto& p:p_array)
+    {
+        i += p.weight;
+        if(p.weight > weights_max) weights_max = p.weight;
+    }
     for(auto& p:p_array) p.weight /= i;
+    std::cout<<"nekoneko"<<weights_max<<std::endl;
 }
 
 void DistanceBasedLocalizer::normalize_number(std::vector<int> &nums)
@@ -349,6 +356,7 @@ void DistanceBasedLocalizer::observation_update()
            landmark[i].name = "big";
            landmark[i].x = -5.0 - dist*cos(theta);
            landmark[i].y = -19.0 - dist*sin(theta);
+           landmark[i].yaw = -M_PI/2;
            landmark[i].prob = object.probability;
            double gyaku = 1/dist;
            double sigma = 4.0*gyaku*0.05;
@@ -444,6 +452,8 @@ void DistanceBasedLocalizer::calculate_pose_by_objects(int num,double probs)
         // std::cout<<"per_prob["<<i<<"]"<<per_prob[i]<<std::endl;
     }
 
+    double yaw_by_obj;
+
     int j = 0;
     int per = 0;
     int k = 0;
@@ -474,17 +484,31 @@ void DistanceBasedLocalizer::calculate_pose_by_objects(int num,double probs)
 
         else
         {
-            p.p_pose.pose.position.x = make_gaussian(landmark[j].x,landmark[j].sigma);
-            p.p_pose.pose.position.y = make_gaussian(landmark[j].y,landmark[j].sigma);
-            double yaw_by_obj = make_gaussian(yawyaw,landmark[j].sigma*0.01);
+            double delta_x = p.p_pose.pose.position.x - landmark[j].x;
+            double delta_y = p.p_pose.pose.position.y - landmark[j].y;
+            double delta = sqrt(delta_x * delta_x + delta_y * delta_y);
+            double jump = 1.0;
+            if(delta >= 5)
+            {
+                jump = delta;
+                std::cout<<"delta"<<delta<<std::endl;
+            }
+            p.p_pose.pose.position.x = make_gaussian(landmark[j].x,jump*landmark[j].sigma);
+            p.p_pose.pose.position.y = make_gaussian(landmark[j].y,jump*landmark[j].sigma);
+            yaw_by_obj = make_gaussian(yawyaw,landmark[j].sigma*0.01);
             get_quat(yaw_by_obj,p.p_pose.pose.orientation);
 
             //weight
-            if(landmark[j].name == "bench") p.weight =landmark[j].prob*bench;//bench = 他のweightとの桁数など調整用
-            if(landmark[j].name == "fire") p.weight = landmark[j].prob*fire;//bench = 他のweightとの桁数など調整用
-            if(landmark[j].name == "big") p.weight = landmark[j].prob*big;//bench = 他のweightとの桁数など調整用
-            if(landmark[j].name == "trash") p.weight = landmark[j].prob*trash;//bench = 他のweightとの桁数など調整用
-            if(landmark[j].name == "roomba") p.weight = landmark[j].prob*roomba_a_score.score;//bench = 他のweightとの桁数など調整用
+            if(landmark[j].name == "bench") p.weight = jump*landmark[j].prob*bench;//bench = 他のweightとの桁数など調整用
+            if(landmark[j].name == "fire") p.weight = jump*landmark[j].prob*fire;//bench = 他のweightとの桁数など調整用
+            if(landmark[j].name == "big")
+            {
+                p.weight = jump*landmark[j].prob*big;//bench = 他のweightとの桁数など調整用
+                // yaw_by_obj = make_gaussian(landmark[j].yaw,landmark[j].sigma*0.01);
+                // get_quat(yaw_by_obj,p.p_pose.pose.orientation);
+            }
+            if(landmark[j].name == "trash") p.weight = jump*landmark[j].prob*trash;//bench = 他のweightとの桁数など調整用
+            if(landmark[j].name == "roomba") p.weight = jump*landmark[j].prob*roomba_a_score.score;//bench = 他のweightとの桁数など調整用
 
             // std::cout<<"weight_obj"<<p.weight<<std::endl;
             //landmark[j]の使用回数
@@ -504,7 +528,9 @@ void DistanceBasedLocalizer::calculate_pose_by_objects(int num,double probs)
         double w = p.weight;
         if(!isnan(p.p_pose.pose.position.x))
         {
-            p.weight = w * road_or_wall(p.p_pose.pose.position.x,p.p_pose.pose.position.y);
+            double wa = road_or_wall(p.p_pose.pose.position.x,p.p_pose.pose.position.y);
+            double wd = dist_from_wall(p.p_pose.pose.position.x,p.p_pose.pose.position.y,yaw_by_obj);
+            p.weight = w * wa *wd;
         }
     }
 
@@ -549,9 +575,11 @@ void DistanceBasedLocalizer::calculate_pose_by_odom(int only_odom)
         if(!isnan(p.p_pose.pose.position.x))
         {
             double wa = road_or_wall(p.p_pose.pose.position.x,p.p_pose.pose.position.y);
+            double wd = dist_from_wall(p.p_pose.pose.position.x,p.p_pose.pose.position.y,yawyaw);
             //壁にいたら
             // if(wa == 0) expansion_resetting(p.p_pose.pose.position.x,p.p_pose.pose.position.y,wa);
-            p.weight = w*wa;
+
+            p.weight = w*wa*wd;
         // std::cout << "weo:" << p.weight << std::endl;
         }
     }
@@ -574,6 +602,12 @@ void DistanceBasedLocalizer::expansion_resetting(double x,double y,double wa)
 
 void DistanceBasedLocalizer::estimate_pose()
 {
+    if(!isnan(db_pose.pose.position.x))
+    {
+        std::cout<<"aua"<<db_pose.pose.position.x<<std::endl;
+        old_pose = db_pose;
+    }
+
     normalize_ps(p_array);
     double x = 0;
     double y = 0;
@@ -589,10 +623,9 @@ void DistanceBasedLocalizer::estimate_pose()
             max_weight = p.weight;
             yaw = get_rpy(p.p_pose.pose.orientation);
         }
-        // if(p.weight < min_weight) min_weight = p.weight;
     }
 
-    std::cout << "max_weight:" << max_weight <<std::endl;
+    // std::cout << "max_weight:" << max_weight <<std::endl;
     db_pose.pose.position.x = x;
     db_pose.pose.position.y = y;
     if(is_only_odom) get_quat(yawyaw,db_pose.pose.orientation);
@@ -770,6 +803,16 @@ double DistanceBasedLocalizer::road_or_wall(double x,double y)
     else if(map.data[index] == -1) wa = 0.001;
     return wa;
 }
+double DistanceBasedLocalizer::dist_from_wall(double x,double y,double yaw)
+{
+    double wa = 1.0;
+    double x_next = x + 0.01*cos(yaw);
+    double y_next = y + 0.01*sin(yaw);
+    int index = xy_map(x,y);
+    if(map.data[index] == 100) wa = 0.05;
+    else if(map.data[index] == -1) wa = 0.01;
+    return wa;
+}
 
 void DistanceBasedLocalizer::process()
 {
@@ -816,6 +859,7 @@ void DistanceBasedLocalizer::process()
 
 
             make_poses(p_array);
+
             if(!isnan(db_poses.poses[0].position.x) || !isnan(db_poses.poses[0].position.y)) pub_db_poses.publish(db_poses);
             if(!isnan(db_pose.pose.position.x) || !isnan(db_pose.pose.position.y)) pub_db_pose.publish(db_pose);
             roomba_position();
