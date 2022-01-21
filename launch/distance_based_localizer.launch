@@ -4,11 +4,24 @@
     <arg name="map_file" default="$(find chibi20_2)/mapdata/goodmap.yaml"/>
     <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)" output="screen"/>
 
-    <!-- <param name="use_sim_time" value="false" type="bool"/> -->
+    <!-- <param name="use_sim_time" value="true" type="bool"/> -->
 
-    <node pkg="distance_based_localizer" type="distance_based_localizer" name="distance_based_localizer" output="screen" >
-        <remap from="/roomba/odometry" to="roomba2/roomba/odometry" />
-        <!-- <remap from="/object_positions" to="roomba1/object_positions" /> -->
+    <node pkg="distance_based_localizer" type="distance_based_localizer_ver2" name="distance_based_localizer" output="screen" >
+        <param name="roomba_name" value="5"/>
+        <param name="num_s" value="5"/>
+        <param name="weight_s" value="5"/>
+        <param name="x_init" value="5"/>
+        <param name="y_init" value="5"/>
+        <param name="yaw_init" value="5"/>
+        <param name="odom" value="5"/>
+        <param name="" value="5"/>
+        <param name="roomba_name" value="5"/>
+        <param name="roomba_name" value="5"/>
+        <param name="roomba_name" value="5"/>
+        <param name="roomba_name" value="5"/>
+        <param name="roomba_name" value="5"/>
+        <param name="roomba_name" value="5"/>
+        <param name="roomba_name" value="5"/>
     </node>
 </launch>
 

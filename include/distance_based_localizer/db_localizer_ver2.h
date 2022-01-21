@@ -43,13 +43,13 @@ class DistanceBasedLocalizer
         {
             public:
                 std::string name;
-                int num;
                 double prob;
                 double x;
                 double y;
                 double yaw;
                 double sigma;
-                int flag = 0;
+                double weight;
+                int count;
         };
 
         //method
@@ -64,6 +64,7 @@ class DistanceBasedLocalizer
         double set_yaw(double yaw);
         double make_gaussian(double mu,double sigma);
         void param_reset();
+        void counter_reset();
         void normalize_ps(std::vector<Particle> &p_array);
         void normalize_number(std::vector<int> &nums);
 
@@ -71,8 +72,8 @@ class DistanceBasedLocalizer
         void motion_update();
         void observation_update();
         void calculate_pose_by_odom(int only_odom);
-        void calculate_pose_by_objects(int num,double probs);
-        double calculate_obj_weight(int num,double probs);
+        void calculate_pose_by_objects(double num,double probs);
+        double calculate_obj_weight(double num,double probs);
         bool prob_sort(Objects& land,Objects& mark);
         void expansion_resetting(double x,double y,double wa);
         void estimate_pose();
@@ -84,7 +85,7 @@ class DistanceBasedLocalizer
 
         void roomba_position();
         void make_path(nav_msgs::Path &path);
-        void calculate_score(int num,double max_weight,geometry_msgs::PoseStamped &current_pose);
+        void calculate_score(double num,double max_weight,geometry_msgs::PoseStamped &current_pose);
         int xy_map(double x,double y);
         double road_or_wall(double x,double y);
         double dist_from_wall(double x,double y,double yaw);
@@ -93,15 +94,17 @@ class DistanceBasedLocalizer
         double make_dyaw(double yawa,double yawi);
 
         //param
-
         int particle_num;
 
         //score
         int roomba_name;
         double num_s;
         double weight_s;
+        double prob_s;
         double s;
         double probs_for_score;
+        double warp;
+        double sur;
 
         //odom
         double x_old;
@@ -117,11 +120,12 @@ class DistanceBasedLocalizer
         double dyaw;
         double dtrans;
         int only_odom;
+        int count = 0;
 
         //object
         double theta;
         double dist;
-        int obj_num; //num of landmark
+        double obj_num; //num of landmark
         double probs;
         double x_by_obj;
         double y_by_obj;
@@ -129,6 +133,8 @@ class DistanceBasedLocalizer
         double roomba_dist_y;
         double roomba_dist;
         int roomba_num;
+        int okroomba_num;
+        bool okroomba_checker;
         double front_th; //以上だったらそのルンバの位置使う
 
         Objects Bench;
@@ -136,23 +142,18 @@ class DistanceBasedLocalizer
         Objects Big;
         Objects Trash;
 
-        double x_by_bench;
-        double y_by_bench;
         double bench_prob;
-        int bench_num;
-        double x_by_fire;
-        double y_by_fire;
         double fire_prob;
-        double x_by_firee;
-        double y_by_firee;
-        double firee_prob;
-        double x_by_big;
-        double y_by_big;
         double big_prob;
-        double x_by_trash;
-        double y_by_trash;
         double trash_prob;
+        int bench_num;
+        int fire_num;
+        int big_num;
         int trash_num;
+        bool bench_checker;
+        bool fire_checker;
+        bool big_checker;
+        bool trash_checker;
 
         double bench;
         double fire;
@@ -249,6 +250,7 @@ class DistanceBasedLocalizer
         nav_msgs::Path mini_path;
 
         object_detector_msgs::ObjectPositions objects;
+        object_detector_msgs::ObjectPositions old_objects;
 
         distance_based_localizer_msgs::RoombaScore score;
         distance_based_localizer_msgs::RoombaScore roomba_a_score;

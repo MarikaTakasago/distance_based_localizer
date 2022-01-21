@@ -4,22 +4,22 @@
     <arg name="map_file" default="$(find chibi20_2)/mapdata/goodmap.yaml"/>
     <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)" output="screen"/>
 
-    <include file="$(find chibi21_b)/launch/Localizer_path.launch" />
+    <!-- <include file="$(find chibi21_b)/launch/Localizer_path.launch" /> -->
     <param name="use_sim_time" value="true" type="bool"/>
-    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find distance_based_localizer)/config/simulate.rviz" />
+    <!-- <node pkg="rviz" type="rviz" name="rviz" args="&#45;d $(find distance_based_localizer)/config/simulate.rviz" /> -->
     <!-- 5 -->
-    <!-- <node pkg="rosbag" type="play" name="play" args="&#45;&#45;clock /home/amsl/bagfiles/with_yolo2/yroomba1.bag /home/amsl/bagfiles/with_yolo2/rooomba2.bag /home/amsl/bagfiles/with_yolo2/rooomba3.bag /home/amsl/bagfiles/with_yolo2/rooomba4.bag /home/amsl/bagfiles/with_yolo2/roomba5.bag" /> -->
+    <!-- <node pkg="rosbag" type="play" name="play" args="&#45;&#45;clock /home/amsl/bagfiles/with_yolo2/yroomba1.bag /home/amsl/bagfiles/with_yolo2/rooomba2.bag /home/amsl/bagfiles/with_yolo2/rooomba3.bag /home/amsl/bagfiles/with_yolo2/rooomba4.bag /home/amsl/bagfiles/with_yolo2/rooomba5.bag" /> -->
     <!-- 4-->
     <!-- <node pkg="rosbag" type="play" name="play" args="&#45;&#45;clock /home/amsl/bagfiles/with_yolo2/yroomba1.bag /home/amsl/bagfiles/with_yolo2/rooomba2.bag /home/amsl/bagfiles/with_yolo2/rooomba3.bag /home/amsl/bagfiles/with_yolo2/rooomba4.bag" /> -->
     <!-- 3 -->
     <!-- <node pkg="rosbag" type="play" name="play" args="&#45;&#45;clock /home/amsl/bagfiles/with_yolo2/rooomba3.bag /home/amsl/bagfiles/with_yolo2/rooomba2.bag /home/amsl/bagfiles/with_yolo2/yroomba1.bag" /> -->
     <!-- 1 -->
-    <!-- <node pkg="rosbag" type="play" name="play" args="&#45;&#45;clock /home/amsl/bagfiles/with_yolo2/roomba5.bag" /> -->
+    <!-- <node pkg="rosbag" type="play" name="play" args="&#45;&#45;clock /home/amsl/bagfiles/with_yolo2/rooomba3.bag" /> -->
     <!-- <node pkg="rosbag" type="play" name="play" args="&#45;&#45;clock /home/amsl/bagfiles/six_roomba_20210429/six_roomba_6_2021&#45;04&#45;29&#45;18&#45;56&#45;33.bag" /> -->
     <!-- 2 -->
-    <!-- <node pkg="rosbag" type="play" name="play" args="&#45;&#45;clock /home/amsl/bagfiles/with_yolo2/rooomba4.bag /home/amsl/bagfiles/with_yolo2/roomba5.bag" /> -->
+    <!-- <node pkg="rosbag" type="play" name="play" args="&#45;&#45;clock /home/amsl/bagfiles/with_yolo2/yroomba1.bag /home/amsl/bagfiles/with_yolo2/rooomba2.bag" /> -->
     <!-- 6 -->
-    <node pkg="rosbag" type="play" name="play" args="--clock /home/amsl/bagfiles/with_yolo2/yroomba1.bag /home/amsl/bagfiles/with_yolo2/rooomba2.bag /home/amsl/bagfiles/with_yolo2/rooomba3.bag /home/amsl/bagfiles/with_yolo2/rooomba4.bag /home/amsl/bagfiles/with_yolo2/roomba5.bag /home/amsl/bagfiles/with_yolo2/rooomba6.bag" />
+    <node pkg="rosbag" type="play" name="play" args="--clock /home/amsl/bagfiles/with_yolo2/yroomba1.bag /home/amsl/bagfiles/with_yolo2/rooomba2.bag /home/amsl/bagfiles/with_yolo2/rooomba3.bag /home/amsl/bagfiles/with_yolo2/rooomba4.bag /home/amsl/bagfiles/with_yolo2/rooomba5.bag /home/amsl/bagfiles/with_yolo2/rooomba6.bag" />
 
     <!-- roomba1 -->
     <node pkg="distance_based_localizer" type="distance_based_localizer_ver2" name="distance_based_localizer_1" >
@@ -30,12 +30,11 @@
         <remap from="/db_poses" to="roomba1/db_poses" />
         <remap from="/score" to="roomba1/score" />
         <remap from="/path" to="roomba1/path" />
-        <!-- <remap from="/behind_roomba/score" to="/roomba2/score" /> -->
+        <remap from="/behind_roomba/score" to="/roomba2/score" />
 
         <param name="roomba_name" value="1" type="int" />
         <param name="num_s" value="1.0" type="double" />
-        <param name="weight_s" value="1.0" type="double" />
-        <param name="prob_s" value="1.0" type="double" />
+        <param name="weight_s" value="1.5" type="double" />
         <param name="particlce_num" value="300" type="int" />
         <param name="x_init" value="7.0" type="double" />
         <param name="y_init" value="1.0" type="double" />
@@ -53,15 +52,15 @@
         <param name="x_cov_1" value="0.1" type="double" />
         <param name="y_cov_1" value="0.1" type="double" />
         <param name="yaw_cov_1" value="0.05" type="double" />
-        <param name="x_cov_2" value="0.01" type="double" />
-        <param name="y_cov_2" value="0.01" type="double" />
-        <param name="yaw_cov_2" value="0.01" type="double" />
+        <param name="x_cov_2" value="0.02" type="double" />
+        <param name="y_cov_2" value="0.02" type="double" />
+        <param name="yaw_cov_2" value="0.02" type="double" />
         <param name="limit" value="100" type="int" />
         <param name="move_noise" value="0.2" type="double" />
         <param name="estimated_weight_th" value="4.0" type="double" />
         <param name="roomba_odom" value="roomba1_odom" type="string" />
         <param name="is_only_odom" value="false" type="bool" />
-        <param name="behind_th" value="0.9" type="double" />
+        <param name="behind_th" value="0.8" type="double" />
     </node>
     <!-- roobma1 only odom -->
     <!-- <node pkg="distance_based_localizer" type="distance_based_localizer_ver2" name="distance_based_localizer_1_odom" > -->
@@ -101,8 +100,8 @@
     <!--     <param name="is_only_odom" value="true" type="bool" /> -->
     <!-- </node> -->
     <!-- roomba2 -->
-    <node pkg="distance_based_localizer" type="distance_based_localizer_ver2" name="distance_based_localizer_2" output="screen" >
-    <!-- <node pkg="distance_based_localizer" type="distance_based_localizer_ver2" name="distance_based_localizer_2" > -->
+    <!-- <node pkg="distance_based_localizer" type="distance_based_localizer_ver2" name="distance_based_localizer_2" output="screen" > -->
+    <node pkg="distance_based_localizer" type="distance_based_localizer_ver2" name="distance_based_localizer_2" >
         <remap from="/roomba/odometry" to="roomba2/roomba/odometry" />
         <remap from="/object_positions" to="roomba2/object_positions" />
         <remap from="/db_pose" to="roomba2/db_pose" />
@@ -110,13 +109,12 @@
         <remap from="/front_roomba_pose" to="roomba2/front_roomba_pose" />
         <remap from="/score" to="roomba2/score" />
         <remap from="/path" to="roomba2/path" />
-        <!-- <remap from="/front_roomba/score" to="roomba1/score" /> -->
-        <!-- <remap from="/behind_roomba/score" to="roomba3/score" /> -->
+        <remap from="/front_roomba/score" to="roomba1/score" />
+        <remap from="/behind_roomba/score" to="roomba3/score" />
 
         <param name="roomba_name" value="2" type="int" />
         <param name="num_s" value="1.0" type="double" />
-        <param name="weight_s" value="1.0" type="double" />
-        <param name="prob_s" value="1.0" type="double" />
+        <param name="weight_s" value="1.5" type="double" />
         <param name="particlce_num" value="300" type="int" />
         <param name="x_init" value="7.0" type="double" />
         <param name="y_init" value="0.5" type="double" />
@@ -136,7 +134,7 @@
         <param name="yaw_cov_1" value="0.1" type="double" />
         <param name="x_cov_2" value="0.01" type="double" />
         <param name="y_cov_2" value="0.01" type="double" />
-        <param name="yaw_cov_2" value="0.01" type="double" />
+        <param name="yaw_cov_2" value="0.02" type="double" />
         <param name="limit" value="100" type="int" />
         <param name="move_noise" value="0.2" type="double" />
         <param name="estimated_weight_th" value="4.0" type="double" />
@@ -193,13 +191,12 @@
         <remap from="/db_poses" to="roomba3/db_poses" />
         <remap from="/score" to="roomba3/score" />
         <remap from="/path" to="roomba3/path" />
-        <!-- <remap from="/front_roomba/score" to="roomba2/score" /> -->
-        <!-- <remap from="/behind_roomba/score" to="roomba4/score" /> -->
+        <remap from="/front_roomba/score" to="roomba2/score" />
+        <remap from="/behind_roomba/score" to="roomba4/score" />
 
         <param name="roomba_name" value="3" type="int" />
         <param name="num_s" value="1.0" type="double" />
-        <param name="weight_s" value="1.0" type="double" />
-        <param name="prob_s" value="1.0" type="double" />
+        <param name="weight_s" value="1.5" type="double" />
         <param name="particlce_num" value="300" type="int" />
         <param name="x_init" value="7.0" type="double" />
         <param name="y_init" value="0.0" type="double" />
@@ -219,13 +216,13 @@
         <param name="yaw_cov_1" value="0.1" type="double" />
         <param name="x_cov_2" value="0.01" type="double" />
         <param name="y_cov_2" value="0.01" type="double" />
-        <param name="yaw_cov_2" value="0.01" type="double" />
+        <param name="yaw_cov_2" value="0.02" type="double" />
         <param name="limit" value="100" type="int" />
         <param name="move_noise" value="0.2" type="double" />
         <param name="estimated_weight_th" value="4.0" type="double" />
         <param name="roomba_odom" value="roomba3_odom" type="string" />
         <param name="is_only_odom" value="false" type="bool" />
-        <param name="behind_th" value="0.9" type="double" />
+        <param name="behind_th" value="0.7" type="double" />
         <param name="front_th" value="1.0" type="double" />
     </node>
     <!-- roomba3_odom  -->
@@ -274,13 +271,12 @@
         <remap from="/db_poses" to="roomba4/db_poses" />
         <remap from="/score" to="roomba4/score" />
         <remap from="/path" to="roomba4/path" />
-        <!-- <remap from="/front_roomba/score" to="roomba3/score" /> -->
+        <remap from="/front_roomba/score" to="roomba3/score" />
         <!-- <remap from="/behind_roomba/score" to="roomba5/score" /> -->
 
         <param name="roomba_name" value="4" type="int" />
         <param name="num_s" value="1.0" type="double" />
-        <param name="weight_s" value="1.0" type="double" />
-        <param name="prob_s" value="1.0" type="double" />
+        <param name="weight_s" value="1.5" type="double" />
         <param name="particlce_num" value="300" type="int" />
         <param name="x_init" value="7.0" type="double" />
         <param name="y_init" value="-0.5" type="double" />
@@ -307,7 +303,7 @@
         <param name="roomba_odom" value="roomba4_odom" type="string" />
         <param name="is_only_odom" value="false" type="bool" />
         <param name="behind_th" value="0.8" type="double" />
-        <param name="front_th" value="1.0" type="double" />
+        <param name="front_th" value="0.9" type="double" />
     </node>
     <!-- roomba4 only_odom -->
     <!-- <node pkg="distance_based_localizer" type="distance_based_localizer_ver2" name="distance_based_localizer_4_odom" output="screen" > -->
@@ -347,21 +343,20 @@
     <!--     <param name="is_only_odom" value="true" type="bool" /> -->
     <!-- </node> -->
     <!-- roomba5 -->
-    <!-- <node pkg="distance_based_localizer" type="distance_based_localizer_ver2" name="distance_based_localizer_5" output="screen" > -->
-    <node pkg="distance_based_localizer" type="distance_based_localizer_ver2" name="distance_based_localizer_5" >
+    <node pkg="distance_based_localizer" type="distance_based_localizer_ver2" name="distance_based_localizer_5" output="screen" >
+    <!-- <node pkg="distance_based_localizer" type="distance_based_localizer_ver2" name="distance_based_localizer_5" > -->
         <remap from="/roomba/odometry" to="roomba5/roomba/odometry" />
         <remap from="/object_positions" to="roomba5/object_positions" />
         <remap from="/db_pose" to="roomba5/db_pose" />
         <remap from="/db_poses" to="roomba5/db_poses" />
         <remap from="/score" to="roomba5/score" />
         <remap from="/path" to="roomba5/path" />
-        <!-- <remap from="/front_roomba/score" to="roomba4/score" /> -->
-        <!-- <remap from="/behind_roomba/score" to="roomba6/score" /> -->
+        <remap from="/front_roomba/score" to="roomba4/score" />
+        <remap from="/behind_roomba/score" to="roomba6/score" />
 
         <param name="roomba_name" value="5" type="int" />
         <param name="num_s" value="1.0" type="double" />
-        <param name="weight_s" value="1.0" type="double" />
-        <param name="prob_s" value="1.0" type="double" />
+        <param name="weight_s" value="1.5" type="double" />
         <param name="particlce_num" value="300" type="int" />
         <param name="x_init" value="7.0" type="double" />
         <param name="y_init" value="-1.5" type="double" />
@@ -370,7 +365,7 @@
         <param name="fire" value="1.0" type="double" />
         <param name="big" value="1.5" type="double" />
         <param name="trash" value="0.8" type="double" />
-        <param name="odom" value="10" type="double" />
+        <param name="odom" value="20" type="double" />
         <param name="alpha_slow_th" value="0.001" type="double" />
         <param name="alpha_fast_th" value="0.1" type="double" />
         <param name="x_cov_init" value="0.8" type="double" />
@@ -388,7 +383,7 @@
         <param name="roomba_odom" value="roomba5_odom" type="string" />
         <param name="is_only_odom" value="false" type="bool" />
         <param name="behind_th" value="0.7" type="double" />
-        <param name="front_th" value="1.0" type="double" />
+        <param name="front_th" value="0.9" type="double" />
     </node>
     <!-- roomba5 only_odom -->
     <!-- <node pkg="distance_based_localizer" type="distance_based_localizer_ver2" name="distance_based_localizer_5_odom" output="screen" > -->
@@ -429,8 +424,7 @@
     <!-- </node> -->
     <!--  -->
     <!-- roomba6 -->
-    <node pkg="distance_based_localizer" type="distance_based_localizer_ver2" name="distance_based_localizer_6" >
-    <!-- <node pkg="distance_based_localizer" type="distance_based_localizer_ver2" name="distance_based_localizer_6" output="screen" > -->
+    <node pkg="distance_based_localizer" type="distance_based_localizer_ver2" name="distance_based_localizer_6" output="screen" >
         <remap from="/roomba/odometry" to="roomba6/roomba/odometry" />
         <remap from="/object_positions" to="roomba6/object_positions" />
         <remap from="/db_pose" to="roomba6/db_pose" />
@@ -441,8 +435,7 @@
 
         <param name="roomba_name" value="6" type="int" />
         <param name="num_s" value="1.0" type="double" />
-        <param name="weight_s" value="1.0" type="double" />
-        <param name="prob_s" value="1.0" type="double" />
+        <param name="weight_s" value="1.5" type="double" />
         <param name="particlce_num" value="300" type="int" />
         <param name="x_init" value="7.0" type="double" />
         <param name="y_init" value="-1.5" type="double" />
@@ -509,29 +502,29 @@
     <!--     <param name="is_only_odom" value="true" type="bool" /> -->
     <!--     </node> -->
     <!--  -->
-    <include file="$(find distance_based_localizer)/launch/evaluation.launch">
-        <arg name="roomba" value="1"/>
-        <arg name="rec_bag_name" value="roomba1_12"/>
-    </include>
-    <include file="$(find distance_based_localizer)/launch/evaluation.launch">
-        <arg name="roomba" value="2"/>
-        <arg name="rec_bag_name" value="roomba2_12"/>
-    </include>
-    <include file="$(find distance_based_localizer)/launch/evaluation.launch">
-        <arg name="roomba" value="3"/>
-        <arg name="rec_bag_name" value="roomba3_3"/>
-    </include>
-    <include file="$(find distance_based_localizer)/launch/evaluation.launch">
-        <arg name="roomba" value="4"/>
-        <arg name="rec_bag_name" value="roomba4_34"/>
-    </include>
-    <include file="$(find distance_based_localizer)/launch/evaluation.launch">
-        <arg name="roomba" value="5"/>
-        <arg name="rec_bag_name" value="roomba5_solo4"/>
-    </include>
-    <include file="$(find distance_based_localizer)/launch/evaluation.launch">
-        <arg name="roomba" value="6"/>
-        <arg name="rec_bag_name" value="roomba6_solo4"/>
-    </include>
+    <!-- <include file="$(find distance_based_localizer)/launch/evaluation.launch"> -->
+    <!--     <arg name="roomba" value="1"/> -->
+    <!--     <arg name="rec_bag_name" value="roomba1_solo3_2"/> -->
+    <!-- </include> -->
+    <!-- <include file="$(find distance_based_localizer)/launch/evaluation.launch"> -->
+    <!--     <arg name="roomba" value="2"/> -->
+    <!--     <arg name="rec_bag_name" value="roomba2_solo3_2"/> -->
+    <!-- </include> -->
+    <!-- <include file="$(find distance_based_localizer)/launch/evaluation.launch"> -->
+    <!--     <arg name="roomba" value="3"/> -->
+    <!--     <arg name="rec_bag_name" value="roomba3_solo3_2"/> -->
+    <!-- </include> -->
+    <!-- <include file="$(find distance_based_localizer)/launch/evaluation.launch"> -->
+    <!--     <arg name="roomba" value="4"/> -->
+    <!--     <arg name="rec_bag_name" value="roomba4_solo3_2"/> -->
+    <!-- </include> -->
+    <!-- <include file="$(find distance_based_localizer)/launch/evaluation.launch"> -->
+    <!--     <arg name="roomba" value="5"/> -->
+    <!--     <arg name="rec_bag_name" value="roomba5_solo3_2"/> -->
+    <!-- </include> -->
+    <!-- <include file="$(find distance_based_localizer)/launch/evaluation.launch"> -->
+    <!--     <arg name="roomba" value="6"/> -->
+    <!--     <arg name="rec_bag_name" value="roomba6_solo3_2"/> -->
+    <!-- </include> -->
 </launch>
 
