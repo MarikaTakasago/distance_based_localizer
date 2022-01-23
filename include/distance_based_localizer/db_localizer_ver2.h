@@ -105,6 +105,7 @@ class DistanceBasedLocalizer
         double probs_for_score;
         double warp;
         double sur;
+        int island;
 
         //odom
         double x_old;
@@ -206,6 +207,7 @@ class DistanceBasedLocalizer
         double behind_x = 0;
         double behind_y = 0;
         double behind_score = 0;
+        double behind_counter;
         double behind_yaw;
         double behind_th; //以下になったら後ろのルンバの位置もらう
 
