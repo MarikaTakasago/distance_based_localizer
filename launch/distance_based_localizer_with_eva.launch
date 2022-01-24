@@ -6,7 +6,7 @@
 
     <include file="$(find chibi21_b)/launch/Localizer_path.launch" />
     <param name="use_sim_time" value="true" type="bool"/>
-    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find distance_based_localizer)/config/simulate.rviz" />
+    <!-- <node pkg="rviz" type="rviz" name="rviz" args="&#45;d $(find distance_based_localizer)/config/simulate.rviz" /> -->
     <!-- 5 -->
     <!-- <node pkg="rosbag" type="play" name="play" args="&#45;&#45;clock /home/amsl/bagfiles/with_yolo2/yroomba1.bag /home/amsl/bagfiles/with_yolo2/rooomba2.bag /home/amsl/bagfiles/with_yolo2/rooomba3.bag /home/amsl/bagfiles/with_yolo2/rooomba4.bag /home/amsl/bagfiles/with_yolo2/roomba5.bag" /> -->
     <!-- 4-->
@@ -30,7 +30,7 @@
         <remap from="/db_poses" to="roomba1/db_poses" />
         <remap from="/score" to="roomba1/score" />
         <remap from="/path" to="roomba1/path" />
-        <remap from="/behind_roomba/score" to="/roomba2/score" />
+        <!-- <remap from="/behind_roomba/score" to="/roomba2/score" /> -->
 
         <param name="roomba_name" value="1" type="int" />
         <param name="num_s" value="1.0" type="double" />
@@ -61,7 +61,7 @@
         <param name="estimated_weight_th" value="4.0" type="double" />
         <param name="roomba_odom" value="roomba1_odom" type="string" />
         <param name="is_only_odom" value="false" type="bool" />
-        <param name="behind_th" value="0.5" type="double" />
+        <param name="behind_th" value="1.55" type="double" />
     </node>
     <!-- roomba2 -->
     <node pkg="distance_based_localizer" type="distance_based_localizer_ver2" name="distance_based_localizer_2" output="screen" >
@@ -73,8 +73,8 @@
         <remap from="/front_roomba_pose" to="roomba2/front_roomba_pose" />
         <remap from="/score" to="roomba2/score" />
         <remap from="/path" to="roomba2/path" />
-        <remap from="/front_roomba/score" to="roomba1/score" />
-        <remap from="/behind_roomba/score" to="roomba3/score" />
+        <!-- <remap from="/front_roomba/score" to="roomba1/score" /> -->
+        <!-- <remap from="/behind_roomba/score" to="roomba3/score" /> -->
 
         <param name="roomba_name" value="2" type="int" />
         <param name="num_s" value="1.0" type="double" />
@@ -105,8 +105,8 @@
         <param name="estimated_weight_th" value="4.0" type="double" />
         <param name="roomba_odom" value="roomba2_odom" type="string" />
         <param name="is_only_odom" value="false" type="bool" />
-        <param name="behind_th" value="0.5" type="double" />
-        <param name="front_th" value="1.6" type="double" />
+        <param name="behind_th" value="1.55" type="double" />
+        <param name="front_th" value="2.0" type="double" />
     </node>
     <!-- roomba3 -->
     <node pkg="distance_based_localizer" type="distance_based_localizer_ver2" name="distance_based_localizer_3" output="screen" >
@@ -117,8 +117,8 @@
         <remap from="/db_poses" to="roomba3/db_poses" />
         <remap from="/score" to="roomba3/score" />
         <remap from="/path" to="roomba3/path" />
-        <remap from="/front_roomba/score" to="roomba2/score" />
-        <remap from="/behind_roomba/score" to="roomba4/score" />
+        <!-- <remap from="/front_roomba/score" to="roomba2/score" /> -->
+        <!-- <remap from="/behind_roomba/score" to="roomba4/score" /> -->
 
         <param name="roomba_name" value="3" type="int" />
         <param name="num_s" value="1.0" type="double" />
@@ -149,8 +149,8 @@
         <param name="estimated_weight_th" value="4.0" type="double" />
         <param name="roomba_odom" value="roomba3_odom" type="string" />
         <param name="is_only_odom" value="false" type="bool" />
-        <param name="behind_th" value="0.5" type="double" />
-        <param name="front_th" value="1.7" type="double" />
+        <param name="behind_th" value="1.55" type="double" />
+        <param name="front_th" value="2.0" type="double" />
     </node>
     <!-- roomba4 -->
     <node pkg="distance_based_localizer" type="distance_based_localizer_ver2" name="distance_based_localizer_4" output="screen" >
@@ -161,8 +161,8 @@
         <remap from="/db_poses" to="roomba4/db_poses" />
         <remap from="/score" to="roomba4/score" />
         <remap from="/path" to="roomba4/path" />
-        <remap from="/front_roomba/score" to="roomba3/score" />
-        <remap from="/behind_roomba/score" to="roomba5/score" />
+        <!-- <remap from="/front_roomba/score" to="roomba3/score" /> -->
+        <!-- <remap from="/behind_roomba/score" to="roomba5/score" /> -->
 
         <param name="roomba_name" value="4" type="int" />
         <param name="num_s" value="1.0" type="double" />
@@ -193,7 +193,7 @@
         <param name="estimated_weight_th" value="4.0" type="double" />
         <param name="roomba_odom" value="roomba4_odom" type="string" />
         <param name="is_only_odom" value="false" type="bool" />
-        <param name="behind_th" value="0.5" type="double" />
+        <param name="behind_th" value="1.55" type="double" />
         <param name="front_th" value="2.0" type="double" />
     </node>
     <!-- roomba5 -->
@@ -205,7 +205,7 @@
         <remap from="/db_poses" to="roomba5/db_poses" />
         <remap from="/score" to="roomba5/score" />
         <remap from="/path" to="roomba5/path" />
-        <remap from="/front_roomba/score" to="roomba4/score" />
+        <!-- <remap from="/front_roomba/score" to="roomba4/score" /> -->
         <!-- <remap from="/behind_roomba/score" to="roomba6/score" /> -->
 
         <param name="roomba_name" value="5" type="int" />
@@ -237,8 +237,8 @@
         <param name="estimated_weight_th" value="4.0" type="double" />
         <param name="roomba_odom" value="roomba5_odom" type="string" />
         <param name="is_only_odom" value="false" type="bool" />
-        <param name="behind_th" value="0.5" type="double" />
-        <param name="front_th" value="1.6" type="double" />
+        <param name="behind_th" value="1.55" type="double" />
+        <param name="front_th" value="2.0" type="double" />
     </node>
     <!--  -->
     <!-- roomba6 -->
@@ -263,7 +263,7 @@
         <param name="bench" value="1.0" type="double" />
         <param name="fire" value="1.0" type="double" />
         <param name="big" value="1.5" type="double" />
-        <param name="trash" value="0.8" type="double" />
+        <param name="trash" value="0.9" type="double" />
         <param name="odom" value="20" type="double" />
         <param name="alpha_slow_th" value="0.001" type="double" />
         <param name="alpha_fast_th" value="0.1" type="double" />
@@ -281,8 +281,8 @@
         <param name="estimated_weight_th" value="4.0" type="double" />
         <param name="roomba_odom" value="roomba6_odom" type="string" />
         <param name="is_only_odom" value="false" type="bool" />
-        <param name="behind_th" value="0.5" type="double" />
-        <param name="front_th" value="0.9" type="double" />
+        <param name="behind_th" value="1.55" type="double" />
+        <param name="front_th" value="2.0" type="double" />
         </node>
 
     <include file="$(find distance_based_localizer)/launch/evaluation.launch">

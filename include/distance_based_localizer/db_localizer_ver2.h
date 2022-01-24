@@ -50,6 +50,7 @@ class DistanceBasedLocalizer
                 double sigma;
                 double weight;
                 int count;
+                double np;
         };
 
         //method
@@ -120,8 +121,9 @@ class DistanceBasedLocalizer
         double dy;
         double dyaw;
         double dtrans;
-        int only_odom;
+        int only_odom = 0;
         int count = 0;
+        int stay_particle;
 
         //object
         double theta;
