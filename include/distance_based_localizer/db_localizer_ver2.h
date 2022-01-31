@@ -5,6 +5,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PoseArray.h>
 #include <geometry_msgs/PointStamped.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <std_msgs/Header.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <nav_msgs/Odometry.h>
@@ -240,12 +241,12 @@ class DistanceBasedLocalizer
         ros::Publisher pub_front_roomba_pose;
         ros::Publisher pub_path;
         ros::Publisher pub_score;
+        ros::Publisher pub_db_pose_cov;
 
         geometry_msgs::PoseStamped db_pose;
         geometry_msgs::PoseStamped old_pose;
         geometry_msgs::PoseArray db_poses;
-        geometry_msgs::PointStamped front_roomba_pose;
-        // geometry_msgs::PoseStamped roomba1_pose;
+        geometry_msgs::PoseWithCovarianceStamped db_pose_cov;
 
         nav_msgs::OccupancyGrid map;
         nav_msgs::Odometry current_odom;

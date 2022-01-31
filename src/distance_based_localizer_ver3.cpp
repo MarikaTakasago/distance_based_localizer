@@ -14,8 +14,8 @@ DistanceBasedLocalizer::DistanceBasedLocalizer():private_nh("~")
     pub_db_pose = nh.advertise<geometry_msgs::PoseStamped>("/db_pose",100);
     pub_db_poses = nh.advertise<geometry_msgs::PoseArray>("/db_poses",100);
     pub_path = nh.advertise<nav_msgs::Path>("/path",100);
-    pub_front_roomba_pose = nh.advertise<geometry_msgs::PointStamped>("/front_roomba_pose",100);
     pub_score = nh.advertise<distance_based_localizer_msgs::RoombaScore>("/score",100);
+    pub_db_pose_cov = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/db_pose_cov",100);
 
     private_nh.getParam("particle_num",particle_num);
     private_nh.getParam("roomba_name",roomba_name);
@@ -167,7 +167,7 @@ void DistanceBasedLocalizer::motion_update()
         calculate_pose_by_odom(only_odom);
         estimate_pose();
         calculate_weight(max_weight);
-        if(obj_num > 0) obj_num -= 1;
+        if(obj_num > 0) obj_num -= 0.1;
         if(obj_num <= 0) obj_num = 0;
     }
 
@@ -367,6 +367,7 @@ void DistanceBasedLocalizer::observation_update()
     for(auto& object:objects.object_position)
     {
        double a_theta = yawyaw + object.theta;
+       // if(object.theta<0) a_theta = yawyaw - object.theta;
        // double b_theta = get_rpy(old_pose.pose.orientation);
        // if(fabs(yawyaw - b_theta) > M_PI/6) a_theta = b_theta + object.theta;
        // theta = set_yaw(a_theta);
@@ -490,7 +491,7 @@ void DistanceBasedLocalizer::observation_update()
 
        }
 
-       if(object.Class == "trash_can" && dist < 5.0)
+       if(object.Class == "trash_can" && dist < 4.0)
        {
            if(fire_flag == 3) continue;
            if(!trash_checker) trash_checker = true;
@@ -515,19 +516,23 @@ void DistanceBasedLocalizer::observation_update()
            }
            if(trash_flag == 2)
            {
+               // if(theta<0) theta = -a_theta;
                landmark[i].x = -4.0 - dist*cos(theta);
                landmark[i].y = 15.5 - dist*sin(theta);
                // if(object.theta < 0) landmark[i].yaw = M_PI;
                // else landmark[i].yaw = yawyaw;
-               landmark[i].yaw = yawyaw;
+               // landmark[i].yaw = yawyaw;
+               landmark[i].yaw = M_PI;
            }
            if(trash_flag == 3)
            {
+               // if(theta<0) theta = -a_theta;
                landmark[i].x = 3.0 - dist*cos(theta);
                landmark[i].y = -15.5 - dist*sin(theta);
                // if(object.theta > 0) landmark[i].yaw = 0.0;
                // else landmark[i].yaw = yawyaw;
-               landmark[i].yaw = yawyaw;
+               // landmark[i].yaw = yawyaw;
+               landmark[i].yaw = 0;
            }
            landmark[i].prob = counter*object.probability;
            landmark[i].weight = counter*trash;
@@ -682,7 +687,7 @@ void DistanceBasedLocalizer::calculate_pose_by_objects(double num,double probs)
 
                     if(obj_count == 0 && obj_num > 0)
                     {
-                        obj_num -= 1;
+                        obj_num -= 0.1;
                         only_odom += 1;
                     }
                     landmark_checker = false;
@@ -1008,7 +1013,7 @@ void DistanceBasedLocalizer::roomba_position()
 {
     if(roomba1_checker)
     {
-        front_roomba_pose.header.frame_id = "map";
+        // front_roomba_pose.header.frame_id = "map";
         score.neighbor.pose.position.x = db_pose.pose.position.x + roomba_dist_x;
         score.neighbor.pose.position.y = db_pose.pose.position.y + roomba_dist_y;
         score.neighbor.pose.orientation = db_pose.pose.orientation;
@@ -1051,9 +1056,10 @@ void DistanceBasedLocalizer::calculate_score(double num,double weight,geometry_m
     double old_s = s;
     double ave_prob = 0.0;
     double i = island;
-    if(i > 0) weight = weight/i+2;
+    weight = weight/(i+1);
     if(weight < 1.0) weight = 1.0;
     weight = 1.0/weight;
+    // weight = 486/(100*weight); //1/((weight/486)*100)
     if(num <= 0)
     {
         double odom = only_odom;
@@ -1063,8 +1069,10 @@ void DistanceBasedLocalizer::calculate_score(double num,double weight,geometry_m
     }
 
     // std::cout<<"roomba"<<roomba_name<<"num2"<<num<<std::endl;
-    s = num_s*num + weight_s*weight;
-    // s = num_s*num + weight_s*weight + prob_s*probs_for_score;
+    // s = num_s*num + weight_s*weight ;//ab
+    // s = num_s*num + prob_s*probs_for_score; //ac
+    // s = weight_s*weight + prob_s*probs_for_score; //bc
+    s = num_s*num + weight_s*weight + prob_s*probs_for_score; //all
     // std::cout<<"roomba"<<roomba_name<<"weight"<<weight<<std::endl;
     //壁判定＆瞬間移動判定
 
@@ -1080,12 +1088,12 @@ void DistanceBasedLocalizer::calculate_score(double num,double weight,geometry_m
     double dx = current_pose.pose.position.x-old_pose.pose.position.x;
     double dy = current_pose.pose.position.y-old_pose.pose.position.y;
     // if(sqrt(dx*dx + dy*dy) <= 0.001) s =0;
-    if(stay_particle > 280) s = 0;
+    if(stay_particle > 80) s = 0;
 
     score.name = roomba_name;
     score.pose = current_pose;
     score.score = s;
-    score.dscore =s - old_s;
+    score.dscore = s - old_s;
     // if(s-old_s > 0.5) std::cout<<"roomba"<<roomba_name<<"INC"<<s-old_s<<std::endl;
     // if(s-old_s < -0.5) std::cout<<"roomba"<<roomba_name<<"DEC"<<s-old_s<<std::endl;
     // if(roomba_name == 1)
@@ -1174,10 +1182,10 @@ void DistanceBasedLocalizer::process()
             if(!isnan(db_poses.poses[0].position.x) || !isnan(db_poses.poses[0].position.y)) pub_db_poses.publish(db_poses);
             if(!isnan(db_pose.pose.position.x) || !isnan(db_pose.pose.position.y)) pub_db_pose.publish(db_pose);
             roomba_position();
+            calculate_score(obj_num,sur,db_pose);
             if(is_move)
             {
-                calculate_score(obj_num,sur,db_pose);
-                // std::cout<<"max"<<weights_max<<std::endl;
+                // calculate_score(obj_num,sur,db_pose);
                 pub_score.publish(score);
             }
 
