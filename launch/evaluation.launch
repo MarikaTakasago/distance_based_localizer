@@ -11,6 +11,6 @@
         <remap from="/eva" to="/roomba$(arg roomba)/eva"/>
     </node>
 
-    <node pkg="rosbag" type="record" name="record$(arg roomba)" args="-O /home/amsl/bagfiles/results/$(arg rec_bag_name).bag /roomba$(arg roomba)/eva" />
+    <node pkg="rosbag" type="record" name="record$(arg roomba)" args="-O /home/amsl/bagfiles/results/$(arg rec_bag_name).bag /roomba$(arg roomba)/eva /roomba$(arg roomba)/score" />
 
 </launch>

@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- 3b!!!!!!!!!!!!!!!!!!!!! -->
+
 <launch>
     <arg name="map_file" default="$(find chibi20_2)/mapdata/goodmap.yaml"/>
     <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)" output="screen"/>
@@ -66,8 +66,9 @@
 
     <!-- localizer node -->
     <arg name="output" default="log"/>
+    <arg name="noise" default="0"/>
     <!-- roomba1 -->
-    <node pkg="distance_based_localizer" type="distance_based_localizer_ver3b" name="distance_based_localizer_1" output="$(arg output)" >
+    <node pkg="distance_based_localizer" type="distance_based_localizer_ver3_odom" name="distance_based_localizer_1" output="$(arg output)" >
         <remap from="/roomba/odometry" to="roomba1/roomba/odometry" />
         <remap from="/object_positions" to="roomba1/object_positions" />
         <remap from="/db_pose" to="roomba1/db_pose" />
@@ -76,12 +77,13 @@
         <remap from="/path" to="roomba1/path" />
         <remap from="/behind_roomba/score" to="/roomba2/score" />
         <rosparam command="load" file="$(find distance_based_localizer)/config/roomba1_ver3.yaml" />
-        <param name="behind_roomba_th" value="0.5" type="double" />
+        <param name="behind_roomba_th" value="1.0" type="double" />
         <param name="behind_th" value="0.2" type="double" />
+        <param name="noise_roomba" value="$(arg noise)" />
     </node>
 
     <!-- roomba2 -->
-    <node pkg="distance_based_localizer" type="distance_based_localizer_ver3b" name="distance_based_localizer_2" output="$(arg output)" >
+    <node pkg="distance_based_localizer" type="distance_based_localizer_ver3_odom" name="distance_based_localizer_2" output="$(arg output)" >
         <remap from="/roomba/odometry" to="roomba2/roomba/odometry" />
         <remap from="/object_positions" to="roomba2/object_positions" />
         <remap from="/db_pose" to="roomba2/db_pose" />
@@ -92,12 +94,13 @@
         <remap from="/behind_roomba/score" to="roomba3/score" />
         <rosparam command="load" file="$(find distance_based_localizer)/config/roomba2_ver3.yaml" />
         <param name="behind_th" value="0.2" type="double" />
-        <param name="behind_roomba_th" value="0.5" type="double" />
+        <param name="behind_roomba_th" value="1.0" type="double" />
         <param name="front_roomba_th" value="0.8" type="double" />
+        <param name="noise_roomba" value="$(arg noise)" />
     </node>
 
     <!-- roomba3 -->
-    <node pkg="distance_based_localizer" type="distance_based_localizer_ver3b" name="distance_based_localizer_3" output="$(arg output)" >
+    <node pkg="distance_based_localizer" type="distance_based_localizer_ver3_odom" name="distance_based_localizer_3" output="$(arg output)" >
         <remap from="/roomba/odometry" to="roomba3/roomba/odometry" />
         <remap from="/object_positions" to="roomba3/object_positions" />
         <remap from="/db_pose" to="roomba3/db_pose" />
@@ -108,13 +111,13 @@
         <remap from="/behind_roomba/score" to="roomba4/score" />
         <rosparam command="load" file="$(find distance_based_localizer)/config/roomba3_ver3.yaml" />
         <param name="behind_th" value="0.2" type="double" />
-        <param name="behind_roomba_th" value="0.5" type="double" />
-            <!-- 1.1 datta b_r_th -->
+        <param name="behind_roomba_th" value="1.1" type="double" />
         <param name="front_roomba_th" value="0.8" type="double" />
+        <param name="noise_roomba" value="$(arg noise)" />
     </node>
 
     <!-- roomba4 -->
-    <node pkg="distance_based_localizer" type="distance_based_localizer_ver3b" name="distance_based_localizer_4" output="$(arg output)" >
+    <node pkg="distance_based_localizer" type="distance_based_localizer_ver3_odom" name="distance_based_localizer_4" output="$(arg output)" >
         <remap from="/roomba/odometry" to="roomba4/roomba/odometry" />
         <remap from="/object_positions" to="roomba4/object_positions" />
         <remap from="/db_pose" to="roomba4/db_pose" />
@@ -125,12 +128,13 @@
         <remap from="/behind_roomba/score" to="roomba5/score" />
         <rosparam command="load" file="$(find distance_based_localizer)/config/roomba4_ver3.yaml" />
         <param name="behind_th" value="0.2" type="double" />
-        <param name="behind_roomba_th" value="0.5" type="double" />
+        <param name="behind_roomba_th" value="1.0" type="double" />
         <param name="front_roomba_th" value="0.8" type="double" />
+        <param name="noise_roomba" value="$(arg noise)" />
     </node>
 
     <!-- roomba5 -->
-    <node pkg="distance_based_localizer" type="distance_based_localizer_ver3b" name="distance_based_localizer_5" output="$(arg output)" >
+    <node pkg="distance_based_localizer" type="distance_based_localizer_ver3_odom" name="distance_based_localizer_5" output="$(arg output)" >
         <remap from="/roomba/odometry" to="roomba5/roomba/odometry" />
         <remap from="/object_positions" to="roomba5/object_positions" />
         <remap from="/db_pose" to="roomba5/db_pose" />
@@ -143,10 +147,11 @@
         <param name="behind_th" value="0.2" type="double" />
         <param name="behind_roomba_th" value="1.0" type="double" />
         <param name="front_roomba_th" value="0.8" type="double" />
+        <param name="noise_roomba" value="$(arg noise)" />
     </node>
 
     <!-- roomba6 -->
-    <node pkg="distance_based_localizer" type="distance_based_localizer_ver3b" name="distance_based_localizer_6" output="$(arg output)" >
+    <node pkg="distance_based_localizer" type="distance_based_localizer_ver3_odom" name="distance_based_localizer_6" output="$(arg output)" >
         <remap from="/roomba/odometry" to="roomba6/roomba/odometry" />
         <remap from="/object_positions" to="roomba6/object_positions" />
         <remap from="/db_pose" to="roomba6/db_pose" />
@@ -158,6 +163,7 @@
         <param name="behind_th" value="0.2" type="double" />
         <param name="behind_roomba_th" value="1.0" type="double" />
         <param name="front_roomba_th" value="0.8" type="double" />
+        <param name="noise_roomba" value="$(arg noise)" />
     </node>
 
     <!-- roomba_odom -->
@@ -177,7 +183,7 @@
     <!-- roomba4_solo -->
     <arg name="add_solo" default="false" /> <!-- unless : nothing will happen -->
     <group if="$(arg add_solo)">
-        <node pkg="distance_based_localizer" type="distance_based_localizer_ver3b" name="distance_based_localizer_solo" output="$(arg output)" >
+        <node pkg="distance_based_localizer" type="distance_based_localizer_ver3_odom" name="distance_based_localizer_solo" output="$(arg output)" >
                 <remap from="/roomba/odometry" to="roomba3/roomba/odometry" />
                 <remap from="/object_positions" to="roomba3/object_positions" />
                 <remap from="/db_pose" to="roomba4_solo/db_pose" />

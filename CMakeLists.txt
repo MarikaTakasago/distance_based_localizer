@@ -139,9 +139,11 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/distance_based_localizer_node.cpp)
-add_executable(distance_based_localizer src/distance_based_localizer.cpp)
-add_executable(distance_based_localizer_ver2 src/distance_based_localizer_ver2.cpp)
+# add_executable(distance_based_localizer src/distance_based_localizer.cpp)
+# add_executable(distance_based_localizer_ver2 src/distance_based_localizer_ver2.cpp)
 add_executable(distance_based_localizer_ver3 src/distance_based_localizer_ver3.cpp)
+add_executable(distance_based_localizer_ver3b src/distance_based_localizer_ver3b.cpp)
+add_executable(distance_based_localizer_ver3_odom src/distance_based_localizer_ver3_odom.cpp)
 add_executable(distance_based_localizer_odom src/distance_based_localizer_odom.cpp)
 add_executable(evaluation src/evaluation.cpp)
 
@@ -154,9 +156,11 @@ add_executable(evaluation src/evaluation.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(distance_based_localizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(distance_based_localizer_ver2 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(distance_based_localizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(distance_based_localizer_ver2 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(distance_based_localizer_ver3 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(distance_based_localizer_ver3b ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(distance_based_localizer_ver3_odom ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(distance_based_localizer_odom ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(evaluation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
@@ -165,9 +169,11 @@ add_dependencies(evaluation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTE
 #   ${catkin_LIBRARIES}
 # )
 
-target_link_libraries(distance_based_localizer ${catkin_LIBRARIES})
-target_link_libraries(distance_based_localizer_ver2 ${catkin_LIBRARIES})
+# target_link_libraries(distance_based_localizer ${catkin_LIBRARIES})
+# target_link_libraries(distance_based_localizer_ver2 ${catkin_LIBRARIES})
 target_link_libraries(distance_based_localizer_ver3 ${catkin_LIBRARIES})
+target_link_libraries(distance_based_localizer_ver3b ${catkin_LIBRARIES})
+target_link_libraries(distance_based_localizer_ver3_odom ${catkin_LIBRARIES})
 target_link_libraries(distance_based_localizer_odom ${catkin_LIBRARIES})
 target_link_libraries(evaluation ${catkin_LIBRARIES})
 

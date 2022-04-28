@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-    <!-- did not work :( -->
-    <arg name="play_bag_name" default=""/>
-    <arg name="roomba" default=""/>
-    <node pkg="rostopic" type="rostopic" name="$(arg play_bag_name)" args="echo -b /home/amsl/bagfiles/results/$(arg play_bag_name).bag -p /roomba$(arg roomba)/eva > /home/amsl/csvfiles/dbl/$(arg play_bag_name).csv" />
-</launch>
-

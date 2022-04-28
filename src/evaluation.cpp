@@ -56,6 +56,7 @@ void Evaluation::squar_root()
 
         if(!isnan(diff) && !isnan(dyaw))
         {
+            eva.header.stamp = ros::Time::now();
             eva.name = roomba_num;
             eva.dyaw = dyaw;
             eva.diff = diff;

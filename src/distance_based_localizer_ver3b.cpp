@@ -196,7 +196,7 @@ void DistanceBasedLocalizer::roomba_callback_2(const distance_based_localizer_ms
             }
             if((s < behind_th && s > 0) || only_odom > 1000)
             {
-                if((roomba_b_score.score > behind_roomba_th) || (roomba_b_score.score - s > 0.1))
+                if((roomba_b_score.score > behind_roomba_th) || (roomba_b_score.score - s > 0))
                 {
                     std::cout<<"roomba"<<roomba_name<<"behind"<<s<<std::endl;
                     // std::cout<<"roomba"<<roomba_name<<"only_odom"<<only_odom<<std::endl;
@@ -542,6 +542,7 @@ void DistanceBasedLocalizer::observation_update()
        if(object.Class == "roomba" && object.probability > 0.99)
        {
            int front_num = object.roomba_num;
+            // std::cout<<"roomba"<<roomba_name<<"look"<<front_num<<std::endl;
            if(front_num != roomba_a_score.name) continue; //1つ前のルンバじゃなかったらスルー
            if((s == 0) || (dist < 7.0 && dist > 0.0))
            {
@@ -551,31 +552,31 @@ void DistanceBasedLocalizer::observation_update()
                roomba_dist_x = dist*cos(theta);
                roomba_dist_y = dist*sin(theta);
                neighbor_name = roomba_a_score.name;
-
-               double gyaku = double(1.0/dist);
-               double sigma = 7.0*gyaku*0.01;
-               if(roomba_a_score.score > front_roomba_th && roomba_a_score.score-s > 0.5 && fabs(roomba_a_score.dscore)<0.6)
-               {
-                   std::cout<<"roomba"<<roomba_name<<"front"<<std::endl;
-                   // std::cout<<"s"<<std::endl;
-                   if(!okroomba_checker) okroomba_checker = true;
-                   okroomba_num += 1;
-                   if(okroomba_num<20) counter = 0.05*okroomba_num;
-                   if(okroomba_num<10) num_counter = 0.1*okroomba_num;
-                   landmark[i].name = "roomba";
-                   landmark[i].x = roomba_a_score.pose.pose.position.x - roomba_dist_x;
-                   landmark[i].y = roomba_a_score.pose.pose.position.y - roomba_dist_y;
-                   landmark[i].prob = counter*object.probability*roomba_a_score.score;
-                   landmark[i].sigma = sigma;
-                   landmark[i].yaw = get_rpy(roomba_a_score.pose.pose.orientation);
-                   if(fabs(yawyaw - landmark[i].yaw) > M_PI/6) landmark[i].yaw = yawyaw;
-                   landmark[i].weight = counter*roomba_a_score.score;
-                   landmark[i].count = okroomba_num;
-                   probs += counter*object.probability;
-                   sum_num += num_counter;
-                   i += 1;
-               }
-               roomba_num += 1;
+               //
+               // double gyaku = double(1.0/dist);
+               // double sigma = 7.0*gyaku*0.01;
+               // if(roomba_a_score.score > front_roomba_th && roomba_a_score.score-s > 0.5 && fabs(roomba_a_score.dscore)<0.6)
+               // {
+               //     std::cout<<"roomba"<<roomba_name<<"front"<<std::endl;
+               //     // std::cout<<"s"<<std::endl;
+               //     if(!okroomba_checker) okroomba_checker = true;
+               //     okroomba_num += 1;
+               //     if(okroomba_num<20) counter = 0.05*okroomba_num;
+               //     if(okroomba_num<10) num_counter = 0.1*okroomba_num;
+               //     landmark[i].name = "roomba";
+               //     landmark[i].x = roomba_a_score.pose.pose.position.x - roomba_dist_x;
+               //     landmark[i].y = roomba_a_score.pose.pose.position.y - roomba_dist_y;
+               //     landmark[i].prob = counter*object.probability*roomba_a_score.score;
+               //     landmark[i].sigma = sigma;
+               //     landmark[i].yaw = get_rpy(roomba_a_score.pose.pose.orientation);
+               //     if(fabs(yawyaw - landmark[i].yaw) > M_PI/6) landmark[i].yaw = yawyaw;
+               //     landmark[i].weight = counter*roomba_a_score.score;
+               //     landmark[i].count = okroomba_num;
+               //     probs += counter*object.probability;
+               //     sum_num += num_counter;
+               //     i += 1;
+               // }
+               // roomba_num += 1;
            }
        }
        // i += 1;

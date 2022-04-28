@@ -49,6 +49,7 @@ DistanceBasedLocalizer::DistanceBasedLocalizer():private_nh("~")
     private_nh.getParam("behind_th",behind_th);
     private_nh.getParam("behind_roomba_th",behind_roomba_th);
     private_nh.getParam("front_roomba_th",front_roomba_th);
+    private_nh.getParam("noise_roomba",noise_roomba);
 
     db_pose.header.frame_id = "map";
     db_pose.pose.position.x = x_init;
@@ -106,7 +107,7 @@ void DistanceBasedLocalizer::odometry_callback(const nav_msgs::Odometry::ConstPt
         if(current_odom.pose.pose.position.x > 1 || current_odom.pose.pose.position.y > 1)
         {
             is_move = true;
-            if(count < 101) count += 1;
+            count += 1;
             // std::cout<<"is_move:"<<count<<std::endl;
         }
         if(count < 100) yawyaw = get_rpy(current_odom.pose.pose.orientation) + M_PI/2;
@@ -134,9 +135,14 @@ double DistanceBasedLocalizer::make_dyaw(double yawa,double yawi)
 }
 void DistanceBasedLocalizer::motion_update()
 {
+    double yaw_noise = 0.0;
+    if(roomba_name == noise_roomba && count % 100 == 10) //add noise once in 10secs
+    {
+        yaw_noise = 0.01*M_PI; //totalsec:260->260/10 = 26 -> 25*0.01PI = M_PI/4 = 45[deg]
+    }
     double dx = current_odom.pose.pose.position.x - old_odom.pose.pose.position.x;
     double dy = current_odom.pose.pose.position.y - old_odom.pose.pose.position.y;
-    double c_yaw = get_rpy(current_odom.pose.pose.orientation);
+    double c_yaw = get_rpy(current_odom.pose.pose.orientation) + yaw_noise;
     double o_yaw = get_rpy(old_odom.pose.pose.orientation);
     double dyaw = make_dyaw(o_yaw,c_yaw);
     double dtrans = sqrt(dx*dx + dy*dy); //距離変化
