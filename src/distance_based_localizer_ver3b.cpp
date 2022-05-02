@@ -109,15 +109,15 @@ void DistanceBasedLocalizer::odometry_callback(const nav_msgs::Odometry::ConstPt
             if(count < 101) count += 1;
             // std::cout<<"is_move:"<<count<<std::endl;
         }
-        if(count < 100) yawyaw = get_rpy(current_odom.pose.pose.orientation) + M_PI/2;
+        if(count < 100) yawyaw = get_yaw(current_odom.pose.pose.orientation) + M_PI/2;
         double d_x = current_odom.pose.pose.position.x - old_odom.pose.pose.position.x;
         double d_y = current_odom.pose.pose.position.y - old_odom.pose.pose.position.y;
         // if(d_x != 0 && d_y != 0) is_move = true;
         // std::cout << "odom!" << std::endl;
 
-        // double current_yaw = get_rpy(current_odom.pose.pose.orientation) + M_PI/2;
+        // double current_yaw = get_yaw(current_odom.pose.pose.orientation) + M_PI/2;
         // yawyaw = set_yaw(current_yaw);
-        yawyaw = get_rpy(current_odom.pose.pose.orientation) + M_PI/2;
+        yawyaw = get_yaw(current_odom.pose.pose.orientation) + M_PI/2;
         motion_update();
         // if(d_x != 0 && d_y != 0)
         // {
@@ -136,8 +136,8 @@ void DistanceBasedLocalizer::motion_update()
 {
     double dx = current_odom.pose.pose.position.x - old_odom.pose.pose.position.x;
     double dy = current_odom.pose.pose.position.y - old_odom.pose.pose.position.y;
-    double c_yaw = get_rpy(current_odom.pose.pose.orientation);
-    double o_yaw = get_rpy(old_odom.pose.pose.orientation);
+    double c_yaw = get_yaw(current_odom.pose.pose.orientation);
+    double o_yaw = get_yaw(old_odom.pose.pose.orientation);
     double dyaw = make_dyaw(o_yaw,c_yaw);
     double dtrans = sqrt(dx*dx + dy*dy); //距離変化
     double drot1 = set_yaw(atan2(dy,dx) - o_yaw);
@@ -145,7 +145,7 @@ void DistanceBasedLocalizer::motion_update()
 
     if(count >= 100)
     {
-        yawyaw = get_rpy(db_pose.pose.orientation) + dyaw;
+        yawyaw = get_yaw(db_pose.pose.orientation) + dyaw;
         yawyaw = set_yaw(yawyaw);
     }
 
@@ -191,7 +191,7 @@ void DistanceBasedLocalizer::roomba_callback_2(const distance_based_localizer_ms
                 behind_score = roomba_b_score.score;
                 behind_x = roomba_b_score.neighbor.pose.position.x;
                 behind_y = roomba_b_score.neighbor.pose.position.y;
-                behind_yaw = get_rpy(roomba_b_score.neighbor.pose.orientation);
+                behind_yaw = get_yaw(roomba_b_score.neighbor.pose.orientation);
                 // if(fabs(behind_yaw - yawyaw) > M_PI/6) behind_yaw = yawyaw;
             }
             if((s < behind_th && s > 0) || only_odom > 1000)
@@ -205,7 +205,7 @@ void DistanceBasedLocalizer::roomba_callback_2(const distance_based_localizer_ms
                     behind_score = roomba_b_score.score;
                     behind_x = roomba_b_score.neighbor.pose.position.x;
                     behind_y = roomba_b_score.neighbor.pose.position.y;
-                    behind_yaw = get_rpy(roomba_b_score.neighbor.pose.orientation);
+                    behind_yaw = get_yaw(roomba_b_score.neighbor.pose.orientation);
                     if(fabs(behind_yaw - yawyaw) > M_PI/6) behind_yaw = yawyaw;
                 }
             }
@@ -237,7 +237,7 @@ void DistanceBasedLocalizer::object_callback(const object_detector_msgs::ObjectP
     }
 }
 
-double DistanceBasedLocalizer::get_rpy(const geometry_msgs::Quaternion &q)
+double DistanceBasedLocalizer::get_yaw(const geometry_msgs::Quaternion &q)
 {
     double roll;
     double pitch;
@@ -335,7 +335,7 @@ void DistanceBasedLocalizer::Particle::p_move(double dtrans,double drot1,double 
     drot1 += dbl->make_gaussian(0.0,drot1*dbl->move_noise);
     drot2 += dbl->make_gaussian(0.0,drot2*dbl->move_noise);
 
-    double old_yaw = dbl->get_rpy(p_pose.pose.orientation);
+    double old_yaw = dbl->get_yaw(p_pose.pose.orientation);
 
     double x = p_pose.pose.position.x + dtrans * cos(dbl->set_yaw(old_yaw + drot1));
     double y = p_pose.pose.position.y + dtrans * sin(dbl->set_yaw(old_yaw + drot1));
@@ -365,7 +365,7 @@ void DistanceBasedLocalizer::observation_update()
     {
        double a_theta = yawyaw + object.theta;
        // if(object.theta<0) a_theta = yawyaw - object.theta;
-       // double b_theta = get_rpy(old_pose.pose.orientation);
+       // double b_theta = get_yaw(old_pose.pose.orientation);
        // if(fabs(yawyaw - b_theta) > M_PI/6) a_theta = b_theta + object.theta;
        // theta = set_yaw(a_theta);
        theta = a_theta;
@@ -568,7 +568,7 @@ void DistanceBasedLocalizer::observation_update()
                //     landmark[i].y = roomba_a_score.pose.pose.position.y - roomba_dist_y;
                //     landmark[i].prob = counter*object.probability*roomba_a_score.score;
                //     landmark[i].sigma = sigma;
-               //     landmark[i].yaw = get_rpy(roomba_a_score.pose.pose.orientation);
+               //     landmark[i].yaw = get_yaw(roomba_a_score.pose.pose.orientation);
                //     if(fabs(yawyaw - landmark[i].yaw) > M_PI/6) landmark[i].yaw = yawyaw;
                //     landmark[i].weight = counter*roomba_a_score.score;
                //     landmark[i].count = okroomba_num;
@@ -703,7 +703,7 @@ void DistanceBasedLocalizer::calculate_pose_by_objects(double num,double probs)
             // std::cout<<"weight_odm"<<p.weight<<std::endl;
             if(!isnan(p.p_pose.pose.position.x)) //壁ですか？
             {
-                double p_yaw = get_rpy(p.p_pose.pose.orientation);
+                double p_yaw = get_yaw(p.p_pose.pose.orientation);
                 double wa = road_or_wall(p.p_pose.pose.position.x,p.p_pose.pose.position.y);
                 double wd = dist_from_wall(p.p_pose.pose.position.x,p.p_pose.pose.position.y,p_yaw);
                 p.weight = w * wa *wd;
@@ -757,7 +757,7 @@ void DistanceBasedLocalizer::calculate_pose_by_odom(int only_odom)
         if(!isnan(p.p_pose.pose.position.x))
         {
             double wa = road_or_wall(p.p_pose.pose.position.x,p.p_pose.pose.position.y);
-            double wd = dist_from_wall(p.p_pose.pose.position.x,p.p_pose.pose.position.y,get_rpy(p.p_pose.pose.orientation));
+            double wd = dist_from_wall(p.p_pose.pose.position.x,p.p_pose.pose.position.y,get_yaw(p.p_pose.pose.orientation));
 
             p.weight = w*wa*wd;
         // std::cout << "weo:" << p.weight << std::endl;
@@ -828,7 +828,7 @@ void DistanceBasedLocalizer::estimate_pose()
         if(p.weight > max_weight)
         {
             max_weight = p.weight;
-            yaw = get_rpy(p.p_pose.pose.orientation);
+            yaw = get_yaw(p.p_pose.pose.orientation);
         }
         if(p.weight != 0)
         {
@@ -911,7 +911,7 @@ void DistanceBasedLocalizer::adaptive_resampling()
         {
             Particle p = p_array[index];
             p.weight = 1.0/particle_num;
-            double yaw = get_rpy(db_pose.pose.orientation);
+            double yaw = get_yaw(db_pose.pose.orientation);
 
             p.set_particle(db_pose.pose.position.x,db_pose.pose.position.y,yaw,x_cov_1,y_cov_1,yaw_cov_1);
             resampling_p_array.push_back(p);
@@ -924,7 +924,7 @@ void DistanceBasedLocalizer::expansion_reset()
 {
     for(auto& p:p_array)
    {
-       double yaw = get_rpy(p.p_pose.pose.orientation);
+       double yaw = get_yaw(p.p_pose.pose.orientation);
        p.set_particle(p.p_pose.pose.position.x,p.p_pose.pose.position.y,yaw,x_cov_2,y_cov_2,yaw_cov_2);
    }
 }
@@ -1106,11 +1106,11 @@ void DistanceBasedLocalizer::process()
             {
                 double x_map_baselink = db_pose.pose.position.x;
                 double y_map_baselink = db_pose.pose.position.y;
-                double yaw_map_baselink = get_rpy(db_pose.pose.orientation);
+                double yaw_map_baselink = get_yaw(db_pose.pose.orientation);
 
                 double x_odom_baselink = current_odom.pose.pose.position.x;
                 double y_odom_baselink = current_odom.pose.pose.position.x;
-                double yaw_odom_baselink = get_rpy(current_odom.pose.pose.orientation);
+                double yaw_odom_baselink = get_yaw(current_odom.pose.pose.orientation);
 
                 double yaw_map_odom = make_dyaw(yaw_odom_baselink,yaw_map_baselink);
                 double x_map_odom = x_map_baselink - x_odom_baselink*cos(yaw_map_odom) + y_odom_baselink*sin(yaw_map_odom);

@@ -4,9 +4,13 @@
     <arg name="map_file" default="$(find chibi20_2)/mapdata/goodmap.yaml"/>
     <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)" output="screen"/>
 
-    <include file="$(find chibi21_b)/launch/Localizer_path.launch" />
+    <!-- <include file="$(find chibi21_b)/launch/Localizer_path.launch" /> -->
 
-    <!-- rviz : rvizz.launch -->
+        <!-- rviz : rvizz.launch -->
+    <arg name="rviz" default="0"/>
+    <group if="$(eval rviz==1)">
+        <include file="$(find distance_based_localizer)/launch/rvizz.launch"/>
+    </group>
 
     <!-- rosbag play -->
     <param name="use_sim_time" value="true" type="bool"/>
@@ -189,7 +193,7 @@
         </group>
 
     <!-- evaluations -->
-        <arg name="bagfile_num" default=""/>
+        <arg name="bagfile_num" default="0"/>
     <!-- recording : /eva & /score -->
     <include file="$(find distance_based_localizer)/launch/evaluation.launch">
         <arg name="roomba" value="1"/>

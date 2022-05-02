@@ -27,3 +27,13 @@ move_noise: 0.2
 estimated_weight_th: 4.0
 roomba_odom: roomba6_odom
 is_only_odom: false
+behind_th: 0.2
+behind_roomba_th: 1.0
+front_roomba_th: 0.8
+odom_topic_name: "/roomba6/roomba/odometry"
+object_topic_name: "/roomba6/object_positions"
+pose_topic_name: "/roomba6/db_pose"
+poses_topic_name: "/roomba6/db_poses"
+score_topic_name: "/roomba6/score"
+path_topic_name: "/roomba6/path"
+front_topic_name: "/roomba5/score"

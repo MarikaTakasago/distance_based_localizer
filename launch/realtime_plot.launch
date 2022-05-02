@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+
+<launch>
+    <node pkg="plotjuggler" type="plotjuggler" name="realtime_plot" args="--layout $(find distance_based_localizer)/config/plotjuggler.xml"/>
+</launch>

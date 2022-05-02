@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(distance_based_localizer)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11 -g -O0)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   geometry_msgs
   tf
+  tf2
   object_detector_msgs
   distance_based_localizer_msgs
   evaluation_msgs
@@ -146,6 +147,7 @@ add_executable(distance_based_localizer_ver3b src/distance_based_localizer_ver3b
 add_executable(distance_based_localizer_ver3_odom src/distance_based_localizer_ver3_odom.cpp)
 add_executable(distance_based_localizer_odom src/distance_based_localizer_odom.cpp)
 add_executable(evaluation src/evaluation.cpp)
+add_executable(vanish src/vanish.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -163,6 +165,7 @@ add_dependencies(distance_based_localizer_ver3b ${${PROJECT_NAME}_EXPORTED_TARGE
 add_dependencies(distance_based_localizer_ver3_odom ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(distance_based_localizer_odom ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(evaluation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(vanish ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
@@ -176,6 +179,7 @@ target_link_libraries(distance_based_localizer_ver3b ${catkin_LIBRARIES})
 target_link_libraries(distance_based_localizer_ver3_odom ${catkin_LIBRARIES})
 target_link_libraries(distance_based_localizer_odom ${catkin_LIBRARIES})
 target_link_libraries(evaluation ${catkin_LIBRARIES})
+target_link_libraries(vanish ${catkin_LIBRARIES})
 
 #############
 ## Install ##

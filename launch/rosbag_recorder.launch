@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<launch>
+    <arg name="rec_bag_name" default=""/>
+    <arg name="is_record" default="false"/>
+    <group if="$(arg is_record)">
+        <!-- for offline plotjuggler -->
+        <node pkg="rosbag" type="record" name="scores" args="-O /home/amsl/bagfiles/results/for_plot/scores$(arg rec_bag_name).bag /roomba1/score /roomba2/score /roomba3/score /roomba4/score /roomba5/score /roomba6/score" />
+
+        <node pkg="rosbag" type="record" name="evaluations" args="-O /home/amsl/bagfiles/results/for_plot/evaluation$(arg rec_bag_name).bag /roomba1/eva /roomba2/eva /roomba3/eva /roomba4/eva /roomba5/eva /roomba6/eva" />
+    </group>
+
+</launch>

@@ -61,7 +61,7 @@ class DistanceBasedLocalizer
         void roomba_callback_1(const distance_based_localizer_msgs::RoombaScore::ConstPtr &msg);
         void roomba_callback_2(const distance_based_localizer_msgs::RoombaScore::ConstPtr &msg);
         void kf(double pre_x,double pre_y,double cur_x,double cur_y,int sum_num);
-        double get_rpy(const geometry_msgs::Quaternion &q);
+        double get_yaw(const geometry_msgs::Quaternion &q);
         void get_quat(double yaw,geometry_msgs::Quaternion &q);
         double set_yaw(double yaw);
         double make_gaussian(double mu,double sigma);
@@ -169,10 +169,12 @@ class DistanceBasedLocalizer
         double odom;
         double obj_weight;
 
+        //flags
         int bench_flag = 0;
         int fire_flag = 0;
         int big_flag = 0;
         int trash_flag = 0;
+        bool vanish_flag = false;
 
         double x_by_roomba1;
         double y_by_roomba1;
@@ -229,6 +231,16 @@ class DistanceBasedLocalizer
         bool behind_roomba_checker = false;
         bool is_move = false;
         bool is_only_odom = false; //比較用
+
+        // //topics
+        // std::string odom_topic_name;
+        // std::string object_topic_name;
+        // std::string pose_topic_name;
+        // std::string poses_topic_name;
+        // std::string score_topic_name;
+        // std::string path_topic_name;
+        // std::string front_topic_name;
+        // std::string behind_topic_name;
 
 
         //member

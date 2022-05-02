@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+
+<launch>
+    <arg name="vanish_num" default="1" />
+    <arg name="debug" default="true"/>
+    <group if="$(eval debug)">
+        <arg name="map_file" default="$(find chibi20_2)/mapdata/goodmap.yaml"/>
+        <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)" output="screen"/>
+
+            <!-- rviz : rvizz.launch -->
+        <include file="$(find distance_based_localizer)/launch/rvizz.launch"/>
+
+            <!-- rosbag play -->
+        <arg name="is_bag" default="true"/>
+        <param name="use_sim_time" value="true" type="bool"/>
+        <node pkg="rosbag" type="play" name="play" args="--clock /home/amsl/bagfiles/with_yolo2/roomba$(arg vanish_num).bag -r 2" required="false"/>
+            <!-- if required=true shutdown when bagfiles end -->
+    </group>
+    <!-- localizer node -->
+    <arg name="output" default="screen"/>
+    <!-- roomba1 -->
+    <group if="$(eval vanish_num==1)">
+        <node pkg="distance_based_localizer" type="vanish" name="vanish_1" output="$(arg output)" >
+            <rosparam command="load" file="$(find distance_based_localizer)/config/roomba1.yaml" />
+        </node>
+    </group>
+
+    <!-- roomba2 -->
+    <group if="$(eval vanish_num==2)">
+        <node pkg="distance_based_localizer" type="vanish" name="vanish_2" output="$(arg output)" >
+            <rosparam command="load" file="$(find distance_based_localizer)/config/roomba2.yaml" />
+        </node>
+    </group>
+
+    <!-- roomba3 -->
+    <group if="$(eval vanish_num==3)">
+        <node pkg="distance_based_localizer" type="vanish" name="vanish_3" output="$(arg output)" >
+            <rosparam command="load" file="$(find distance_based_localizer)/config/roomba3.yaml" />
+        </node>
+    </group>
+
+    <!-- roomba4 -->
+    <group if="$(eval vanish_num==4)">
+        <node pkg="distance_based_localizer" type="vanish" name="vanish_4" output="$(arg output)" >
+            <rosparam command="load" file="$(find distance_based_localizer)/config/roomba4.yaml" />
+        </node>
+    </group>
+
+    <!-- roomba5 -->
+    <group if="$(eval vanish_num==5)">
+        <node pkg="distance_based_localizer" type="vanish" name="vanish_5" output="$(arg output)" >
+            <rosparam command="load" file="$(find distance_based_localizer)/config/roomba5.yaml" />
+        </node>
+    </group>
+
+    <!-- roomba6 -->
+    <group if="$(eval vanish_num==6)">
+        <node pkg="distance_based_localizer" type="vanish" name="vanish_6" output="$(arg output)" >
+            <rosparam command="load" file="$(find distance_based_localizer)/config/roomba6.yaml" />
+        </node>
+    </group>
+
+</launch>
+
