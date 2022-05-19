@@ -238,7 +238,8 @@ void DistanceBasedLocalizer::roomba_callback_2(const distance_based_localizer_ms
 
 void DistanceBasedLocalizer::object_callback(const object_detector_msgs::ObjectPositions::ConstPtr& msg)
 {
-    if(map_checker && odom_checker && !vanish_flag)
+    // if(map_checker && odom_checker && !vanish_flag)
+    if(map_checker && odom_checker)
     {
         old_objects = objects;
         objects = *msg;
@@ -396,7 +397,7 @@ void DistanceBasedLocalizer::observation_update()
        double counter = 1.0;
        double num_counter = 1.0;
 
-       if(object.Class == "bench" && dist < 4.0)
+       if(!vanish_flag && object.Class == "bench" && dist < 4.0)
        {
            if(!bench_checker) bench_checker = true;
            bench_num += 1;
@@ -430,7 +431,7 @@ void DistanceBasedLocalizer::observation_update()
            i += 1;
        }
 
-       if(object.Class == "fire_hydrant" && dist < 5.0)
+       if(!vanish_flag && object.Class == "fire_hydrant" && dist < 5.0)
        {
            if(!fire_checker) fire_checker = true;
            fire_num += 1;
@@ -489,7 +490,7 @@ void DistanceBasedLocalizer::observation_update()
 
        }
 
-       if(object.Class == "big_bench" && dist < 4.0)
+       if(!vanish_flag && object.Class == "big_bench" && dist < 4.0)
        {
            if(!big_checker) big_checker = true;
            big_num += 1;
@@ -511,7 +512,7 @@ void DistanceBasedLocalizer::observation_update()
 
        }
 
-       if(object.Class == "trash_can" && dist < 4.0)
+       if(!vanish_flag && object.Class == "trash_can" && dist < 4.0)
        {
            if(fire_flag == 3) continue;
            if(!trash_checker) trash_checker = true;
@@ -884,6 +885,7 @@ void DistanceBasedLocalizer::estimate_pose()
 
 void DistanceBasedLocalizer::calculate_weight(double estimated_weight)
 {
+    limit = 500;
     if(alpha_slow == 0) alpha_slow = alpha;
     else alpha_slow += alpha_slow_th * (alpha - alpha_slow);
     if(alpha_fast == 0) alpha_fast = alpha;
@@ -1003,25 +1005,13 @@ void DistanceBasedLocalizer::roomba_position()
     roomba1_checker = false;
 }
 
-void DistanceBasedLocalizer::make_path(nav_msgs::Path &path)
+void DistanceBasedLocalizer::make_path(geometry_msgs::PoseStamped &pose)
 {
-    // std::cout << "make_path" << std::endl;
-    // nav_msgs::Path new_path;
-    // new_path.header.frame_id = "map";
-    std::reverse(path.poses.begin(),path.poses.end());
-    // path = new_path;
-    int i = 0;
-    // int j = 0;
-    for(auto &pth : path.poses)
+    bool get_pose = !isnan(pose.pose.position.x);
+    if(get_pose)
     {
-        bool path_nan_checker = isnan(pth.pose.position.x);
-        if(!path_nan_checker) i = 1;
-        if(path_nan_checker) i = 0;
-    }
-    if(i == 1)
-    {
-        std::reverse(path.poses.begin(),path.poses.end());
-        roomba_path.poses.insert(roomba_path.poses.end(),path.poses.begin(),path.poses.end());
+        mini_path.poses.push_back(pose);
+        roomba_path.poses.insert(roomba_path.poses.end(),mini_path.poses.begin(),mini_path.poses.end());
         pub_path.publish(roomba_path);
     }
     mini_path.poses.clear();
@@ -1069,12 +1059,12 @@ void DistanceBasedLocalizer::calculate_score(double num,double weight,geometry_m
     // if(sqrt(dx*dx + dy*dy) <= 0.001) s =0;
     if(stay_particle > 80) s = 0;
 
-    score.header.frame_id = "base_link";
+    score.header.frame_id = "map";
+    score.pose.header.frame_id = "map";
     score.header.stamp = ros::Time::now();
     score.name = roomba_name;
     score.pose = current_pose;
     score.score = s;
-    // score.score = s;
     score.dscore = s - old_s;
     // if(s-old_s > 0.5) std::cout<<"roomba"<<roomba_name<<"INC"<<s-old_s<<std::endl;
     // if(s-old_s < -0.5) std::cout<<"roomba"<<roomba_name<<"DEC"<<s-old_s<<std::endl;
@@ -1121,7 +1111,6 @@ double DistanceBasedLocalizer::dist_from_wall(double x,double y,double yaw)
 void DistanceBasedLocalizer::process()
 {
     tf::TransformBroadcaster odom_broadcaster;
-    int path = 0;
     mini_path.poses.clear();
 
     ros::Rate rate(10);
@@ -1134,6 +1123,12 @@ void DistanceBasedLocalizer::process()
                 double x_map_baselink = db_pose.pose.position.x;
                 double y_map_baselink = db_pose.pose.position.y;
                 double yaw_map_baselink = get_yaw(db_pose.pose.orientation);
+                if(isnan(db_pose.pose.position.x) || isnan(db_pose.pose.position.y))
+                {
+                    x_map_baselink = db_pose.pose.position.x;
+                    y_map_baselink = db_pose.pose.position.y;
+                    yaw_map_baselink = get_yaw(db_pose.pose.orientation);
+                }
 
                 double x_odom_baselink = current_odom.pose.pose.position.x;
                 double y_odom_baselink = current_odom.pose.pose.position.x;
@@ -1147,7 +1142,6 @@ void DistanceBasedLocalizer::process()
                 odom.header.stamp = ros::Time::now();
 
                 odom.header.frame_id = "map";
-                // odom.child_frame_id = "odom";
                 odom.child_frame_id = roomba_odom;
 
                 odom.transform.translation.x = x_map_odom;
@@ -1155,6 +1149,7 @@ void DistanceBasedLocalizer::process()
                 get_quat(yaw_map_odom,odom.transform.rotation);
 
                 odom_broadcaster.sendTransform(odom);
+
             }
             catch(tf::TransformException &ex)
             {
@@ -1178,10 +1173,7 @@ void DistanceBasedLocalizer::process()
             behind_roomba_checker = false;
 
             change_flags(db_pose);
-            mini_path.poses.push_back(db_pose);
-            make_path(mini_path);
-
-            path += 1;
+            make_path(db_pose);
         }
         ros::spinOnce();
         rate.sleep();

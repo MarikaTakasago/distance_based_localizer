@@ -86,7 +86,7 @@ class DistanceBasedLocalizer
         void change_flags(geometry_msgs::PoseStamped &current_pose);
 
         void roomba_position();
-        void make_path(nav_msgs::Path &path);
+        void make_path(geometry_msgs::PoseStamped &pose);
         void calculate_score(double num,double max_weight,geometry_msgs::PoseStamped &current_pose);
         int xy_map(double x,double y);
         double road_or_wall(double x,double y);

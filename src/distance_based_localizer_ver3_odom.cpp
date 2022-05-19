@@ -981,26 +981,15 @@ void DistanceBasedLocalizer::roomba_position()
     roomba1_checker = false;
 }
 
-void DistanceBasedLocalizer::make_path(nav_msgs::Path &path)
+void DistanceBasedLocalizer::make_path(geometry_msgs::PoseStamped &pose)
 {
-    // std::cout << "make_path" << std::endl;
-    // nav_msgs::Path new_path;
-    // new_path.header.frame_id = "map";
-    std::reverse(path.poses.begin(),path.poses.end());
-    // path = new_path;
-    int i = 0;
-    // int j = 0;
-    for(auto &pth : path.poses)
+    bool get_pose = !isnan(pose.pose.position.x);
+    if(get_pose)
     {
-        bool path_nan_checker = isnan(pth.pose.position.x);
-        if(!path_nan_checker) i = 1;
-        if(path_nan_checker) i = 0;
-    }
-    if(i == 1)
-    {
-        std::reverse(path.poses.begin(),path.poses.end());
-        roomba_path.poses.insert(roomba_path.poses.end(),path.poses.begin(),path.poses.end());
+        mini_path.poses.push_back(pose);
+        roomba_path.poses.insert(roomba_path.poses.end(),mini_path.poses.begin(),mini_path.poses.end());
         pub_path.publish(roomba_path);
+        std::cout << "make_path" << std::endl;
     }
     mini_path.poses.clear();
 }
@@ -1099,7 +1088,6 @@ double DistanceBasedLocalizer::dist_from_wall(double x,double y,double yaw)
 void DistanceBasedLocalizer::process()
 {
     tf::TransformBroadcaster odom_broadcaster;
-    int path = 0;
     mini_path.poses.clear();
 
     ros::Rate rate(10);
@@ -1156,10 +1144,8 @@ void DistanceBasedLocalizer::process()
             behind_roomba_checker = false;
 
             change_flags(db_pose);
-            mini_path.poses.push_back(db_pose);
-            make_path(mini_path);
+            make_path(db_pose);
 
-            path += 1;
         }
         ros::spinOnce();
         rate.sleep();

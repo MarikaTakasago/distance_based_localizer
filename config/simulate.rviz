@@ -124,7 +124,7 @@ Visualization Manager:
       Axes Radius: 0.009999999776482582
       Class: rviz/PoseArray
       Color: 78; 154; 6
-      Enabled: true
+      Enabled: false
       Head Length: 0.07000000029802322
       Head Radius: 0.029999999329447746
       Name: PoseArray
@@ -134,7 +134,7 @@ Visualization Manager:
       Shape: Arrow (Flat)
       Topic: /roomba1/db_poses
       Unreliable: false
-      Value: true
+      Value: false
     - Class: rviz/Image
       Enabled: true
       Image Topic: /roomba2/camera/color/image_rect_color
@@ -214,7 +214,7 @@ Visualization Manager:
       Axes Radius: 0.009999999776482582
       Class: rviz/PoseArray
       Color: 18; 210; 237
-      Enabled: true
+      Enabled: false
       Head Length: 0.07000000029802322
       Head Radius: 0.029999999329447746
       Name: PoseArray
@@ -224,7 +224,7 @@ Visualization Manager:
       Shape: Arrow (Flat)
       Topic: /roomba3/db_poses
       Unreliable: false
-      Value: true
+      Value: false
     - Alpha: 1
       Buffer Length: 1
       Class: rviz/Path
@@ -319,7 +319,7 @@ Visualization Manager:
       Axes Radius: 0.009999999776482582
       Class: rviz/PoseArray
       Color: 252; 175; 62
-      Enabled: true
+      Enabled: false
       Head Length: 0.07000000029802322
       Head Radius: 0.029999999329447746
       Name: PoseArray
@@ -329,7 +329,7 @@ Visualization Manager:
       Shape: Arrow (Flat)
       Topic: /roomba4/db_poses
       Unreliable: false
-      Value: true
+      Value: false
     - Class: rviz/Image
       Enabled: true
       Image Topic: /roomba4/camera/color/image_rect_color
@@ -770,5 +770,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1386
-  X: 371
-  Y: 1162
+  X: 179
+  Y: 123

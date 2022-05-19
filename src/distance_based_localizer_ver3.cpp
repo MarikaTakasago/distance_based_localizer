@@ -66,7 +66,7 @@ DistanceBasedLocalizer::DistanceBasedLocalizer():private_nh("~"),nh("~")
 
     pub_db_pose = nh.advertise<geometry_msgs::PoseStamped>(pose_topic_name,100);
     pub_db_poses = nh.advertise<geometry_msgs::PoseArray>(poses_topic_name,100);
-    pub_path = nh.advertise<nav_msgs::Path>(path_topic_name,100);
+    pub_path = nh.advertise<nav_msgs::Path>(path_topic_name,1);
     pub_score = nh.advertise<distance_based_localizer_msgs::RoombaScore>(score_topic_name,100);
     // pub_db_pose_cov = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/db_pose_cov",100);
 
@@ -1000,26 +1000,15 @@ void DistanceBasedLocalizer::roomba_position()
     roomba1_checker = false;
 }
 
-void DistanceBasedLocalizer::make_path(nav_msgs::Path &path)
+void DistanceBasedLocalizer::make_path(geometry_msgs::PoseStamped &pose)
 {
-    // std::cout << "make_path" << std::endl;
-    // nav_msgs::Path new_path;
-    // new_path.header.frame_id = "map";
-    std::reverse(path.poses.begin(),path.poses.end());
-    // path = new_path;
-    int i = 0;
-    // int j = 0;
-    for(auto &pth : path.poses)
+    bool get_pose = !isnan(pose.pose.position.x);
+    if(get_pose)
     {
-        bool path_nan_checker = isnan(pth.pose.position.x);
-        if(!path_nan_checker) i = 1;
-        if(path_nan_checker) i = 0;
-    }
-    if(i == 1)
-    {
-        std::reverse(path.poses.begin(),path.poses.end());
-        roomba_path.poses.insert(roomba_path.poses.end(),path.poses.begin(),path.poses.end());
+        mini_path.poses.push_back(pose);
+        roomba_path.poses.insert(roomba_path.poses.end(),mini_path.poses.begin(),mini_path.poses.end());
         pub_path.publish(roomba_path);
+        // std::cout << "make_path" << std::endl;
     }
     mini_path.poses.clear();
 }
@@ -1066,12 +1055,12 @@ void DistanceBasedLocalizer::calculate_score(double num,double weight,geometry_m
     // if(sqrt(dx*dx + dy*dy) <= 0.001) s =0;
     if(stay_particle > 80) s = 0;
 
-    score.header.frame_id = "base_link";
+    score.header.frame_id = "map";
+    score.pose.header.frame_id = "map";
     score.header.stamp = ros::Time::now();
     score.name = roomba_name;
     score.pose = current_pose;
     score.score = s;
-    // score.score = s;
     score.dscore = s - old_s;
     // if(s-old_s > 0.5) std::cout<<"roomba"<<roomba_name<<"INC"<<s-old_s<<std::endl;
     // if(s-old_s < -0.5) std::cout<<"roomba"<<roomba_name<<"DEC"<<s-old_s<<std::endl;
@@ -1118,7 +1107,6 @@ double DistanceBasedLocalizer::dist_from_wall(double x,double y,double yaw)
 void DistanceBasedLocalizer::process()
 {
     tf2_ros::TransformBroadcaster odom_broadcaster;
-    int path = 0;
     mini_path.poses.clear();
 
     ros::Rate rate(10);
@@ -1132,6 +1120,12 @@ void DistanceBasedLocalizer::process()
                 double y_map_baselink = db_pose.pose.position.y;
                 double yaw_map_baselink = get_yaw(db_pose.pose.orientation);
 
+                if(isnan(db_pose.pose.position.x) || isnan(db_pose.pose.position.y))
+                {
+                    x_map_baselink = x_init;
+                    y_map_baselink = y_init;
+                    yaw_map_baselink = yaw_init;
+                }
                 double x_odom_baselink = current_odom.pose.pose.position.x;
                 double y_odom_baselink = current_odom.pose.pose.position.x;
                 double yaw_odom_baselink = get_yaw(current_odom.pose.pose.orientation);
@@ -1144,7 +1138,6 @@ void DistanceBasedLocalizer::process()
                 odom.header.stamp = ros::Time::now();
 
                 odom.header.frame_id = "map";
-                // odom.child_frame_id = "odom";
                 odom.child_frame_id = roomba_odom;
 
                 odom.transform.translation.x = x_map_odom;
@@ -1175,10 +1168,8 @@ void DistanceBasedLocalizer::process()
             behind_roomba_checker = false;
 
             change_flags(db_pose);
-            mini_path.poses.push_back(db_pose);
-            make_path(mini_path);
+            make_path(db_pose);
 
-            path += 1;
         }
         ros::spinOnce();
         rate.sleep();
