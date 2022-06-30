@@ -10,6 +10,8 @@ bench: 1.0
 fire: 1.0
 big: 1.5
 trash: 0.7
+robot: 1.5
+behind_roomba: 0.1
 odom: 20
 alpha_slow_th: 0.001
 alpha_fast_th: 0.1
@@ -36,5 +38,5 @@ pose_topic_name: "/roomba4/db_pose"
 poses_topic_name: "/roomba4/db_poses"
 score_topic_name: "/roomba4/score"
 path_topic_name: "/roomba4/path"
-front_topic_name: "/roomba3/score"
-behind_topic_name: "/roomba5/score"
+front_topic_name: "/roomba3/fixed_score"
+behind_topic_name: "/roomba5/fixed_score"
