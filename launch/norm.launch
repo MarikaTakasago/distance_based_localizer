@@ -6,7 +6,7 @@
     <node pkg="chibi20_2" type="global_path_planner" name="gpath">
         <remap from="fixed_map" to="map"/>
     </node>
-    <!-- <node pkg="distance_based_localizer" type="listen6" name="listener" /> -->
+    <node pkg="distance_based_localizer" type="listen6" name="listener" />
 
     <include file="$(find chibi21_b)/launch/Localizer_path.launch" />
 
@@ -83,32 +83,32 @@
     <arg name="output" default="log"/>
     <!-- roomba1 -->
     <node pkg="distance_based_localizer" type="distance_based_localizer_ver3" name="distance_based_localizer_1" output="$(arg output)" >
-        <rosparam command="load" file="$(find distance_based_localizer)/config/roomba1.yaml" />
+        <rosparam command="load" file="$(find distance_based_localizer)/config/roomba1_listen.yaml" />
     </node>
 
     <!-- roomba2 -->
     <node pkg="distance_based_localizer" type="distance_based_localizer_ver3" name="distance_based_localizer_2" output="$(arg output)" >
-        <rosparam command="load" file="$(find distance_based_localizer)/config/roomba2.yaml" />
+        <rosparam command="load" file="$(find distance_based_localizer)/config/roomba2_listen.yaml" />
     </node>
 
     <!-- roomba3 -->
     <node pkg="distance_based_localizer" type="distance_based_localizer_ver3" name="distance_based_localizer_3" output="$(arg output)" >
-        <rosparam command="load" file="$(find distance_based_localizer)/config/roomba3.yaml" />
+        <rosparam command="load" file="$(find distance_based_localizer)/config/roomba3_listen.yaml" />
     </node>
 
     <!-- roomba4 -->
     <node pkg="distance_based_localizer" type="distance_based_localizer_ver3" name="distance_based_localizer_4" output="$(arg output)" >
-        <rosparam command="load" file="$(find distance_based_localizer)/config/roomba4.yaml" />
+        <rosparam command="load" file="$(find distance_based_localizer)/config/roomba4_listen.yaml" />
     </node>
 
     <!-- roomba5 -->
     <node pkg="distance_based_localizer" type="distance_based_localizer_ver3" name="distance_based_localizer_5" output="$(arg output)" >
-        <rosparam command="load" file="$(find distance_based_localizer)/config/roomba5.yaml" />
+        <rosparam command="load" file="$(find distance_based_localizer)/config/roomba5_listen.yaml" />
     </node>
 
     <!-- roomba6 -->
     <node pkg="distance_based_localizer" type="distance_based_localizer_ver3" name="distance_based_localizer_6" output="$(arg output)" >
-        <rosparam command="load" file="$(find distance_based_localizer)/config/roomba6.yaml" />
+        <rosparam command="load" file="$(find distance_based_localizer)/config/roomba6_listen.yaml" />
     </node>
     <!--  -->
     <!-- roomba_odom -->
