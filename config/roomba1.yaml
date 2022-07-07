@@ -1,7 +1,7 @@
 roomba_name: 1
 num_s: 1.0
 weight_s: 0.8
-probs_s: 1.0
+prob_s: 1.0
 particle_num: 300
 x_init: 7.5
 y_init: 1.0

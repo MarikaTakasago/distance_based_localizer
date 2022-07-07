@@ -1,4 +1,4 @@
-#include "distance_based_localizer/db_localizer_ver3.h"
+#include "distance_based_localizer/ver3.h"
 std::random_device seed;
 std::mt19937 engine(seed());
 std::default_random_engine engine2(seed());
@@ -10,7 +10,7 @@ DistanceBasedLocalizer::DistanceBasedLocalizer():private_nh("~"),nh("~")
     private_nh.getParam("roomba_name",roomba_name);
     private_nh.getParam("num_s",num_s);
     private_nh.getParam("weight_s",weight_s);
-    private_nh.getParam("prob_s",weight_s);
+    private_nh.getParam("prob_s",prob_s);
     private_nh.getParam("x_init",x_init);
     private_nh.getParam("y_init",y_init);
     private_nh.getParam("yaw_init",yaw_init);
@@ -245,12 +245,7 @@ void DistanceBasedLocalizer::object_callback(const object_detector_msgs::ObjectP
         for(auto o:objects.object_position)
         {
             if(o.Class == "bench" || o.Class == "fire_hydrant" || o.Class == "big_bench" || o.Class == "trash_can" || o.Class == "roomba") objects_checker = true;
-            if(objects_checker)
-            {
-                // only_odom = 0;
-                // std::cout<<"obj!"<<std::endl;
-                break;
-            }
+            if(objects_checker) break;
         }
         // std::cout << "obj!" << std::endl;
         if(objects_checker) observation_update();
@@ -608,7 +603,6 @@ void DistanceBasedLocalizer::observation_update()
     island = i;
     if(i == 0) only_odom += 1;
     // if(i > 0) only_odom = 0;
-    // counter_reset();
     calculate_pose_by_objects(sum_num,probs);
     estimate_pose();
     calculate_weight(max_weight);
@@ -735,6 +729,7 @@ void DistanceBasedLocalizer::calculate_pose_by_objects(double num,double probs)
             }
         }
     }
+    // std::cout<<"probs_for_score"<<probs_for_score<<std::endl;
 }
 double DistanceBasedLocalizer::calculate_obj_weight(double num,double probs)
 {
@@ -871,16 +866,7 @@ void DistanceBasedLocalizer::estimate_pose()
     db_pose.pose.position.x = x;
     db_pose.pose.position.y = y;
     if(is_only_odom) get_quat(yawyaw,db_pose.pose.orientation);
-    if(!is_only_odom)
-    {
-        // get_quat(yawyaw,db_pose.pose.orientation);
-        get_quat(yaw,db_pose.pose.orientation);
-        // if(roomba_name==5 || roomba_name==6)
-        // {
-        //     // if(max_weight < 0.0034) get_quat(yawyaw,db_pose.pose.orientation);
-        //     if(max_weight >= 0.0034) get_quat(yaw,db_pose.pose.orientation);
-        // }
-    }
+    if(!is_only_odom) get_quat(yaw,db_pose.pose.orientation);
     // std::cout<<"estimate"<<db_pose.pose.position.x<<std::endl;
 }
 
@@ -1013,23 +999,15 @@ void DistanceBasedLocalizer::make_path(geometry_msgs::PoseStamped &pose)
     mini_path.poses.clear();
 }
 
-void DistanceBasedLocalizer::calculate_score(double num,double new_sur,geometry_msgs::PoseStamped &current_pose)
+void DistanceBasedLocalizer::calculate_score(double num,double new_sur,geometry_msgs::PoseStamped &current_pose,double prob)
 {
-    // std::cout<<"roomba"<<roomba_name<<"LM"<<island<<std::endl;
-    // std::cout<<"roomba"<<roomba_name<<"only"<<only_odom<<std::endl;
-    // std::cout<<"roomba"<<roomba_name<<"probs"<<probs_for_score<<std::endl;
-    // std::cout<<"roomba"<<roomba_name<<"num1"<<num<<std::endl;
-    double old_s = s;
+    double i = island;
     if(adaptive) new_sur = old_sur;
     old_sur = new_sur;
-    double ave_prob = 0.0;
-    double i = island;
-    double raw_per_sur = new_sur/486 * 100;
+    if(log10(new_sur) < -4) new_sur = 486;
+    double raw_per_sur = new_sur/486; //* 100; //max 100??
     double per_sur = new_sur/486*10000;
-    if(per_sur < 1.0) per_sur = 1.0;
-    // double weight_sur = 1.0/per_sur;
-    double weight_sur = 1.0 - raw_per_sur;
-    // double weight_sur = 1.0 - per_sur;
+    double weight_sur = 1.0 - raw_per_sur*10;
     if(num <= 0)
     {
         double odom = only_odom;
@@ -1040,10 +1018,12 @@ void DistanceBasedLocalizer::calculate_score(double num,double new_sur,geometry_
     // s = num_s*num + weight_s*weight ;//ab
     // s = num_s*num + prob_s*probs_for_score; //ac
     // s = weight_s*weight + prob_s*probs_for_score; //bc
-    s = num_s*num + weight_s*weight_sur + prob_s*probs_for_score; //all
+    s = num_s*num + weight_s*weight_sur + prob_s*prob; //all
     if(s>=3.0) s = 3.0;//3をMaxに
-    std::cout<<"    s     =     N    +    P    +    w    : "<<std::endl;
-    std::cout<<std::setprecision(3) << s <<"="<< num_s*num <<"+"<< prob_s*probs_for_score <<"+"<< weight_s*weight_sur <<std::endl;
+    std::cout<< "in function:"<< prob << std::endl;
+    std::cout<< "prob_s:"<< prob_s << std::endl;
+    std::cout<<" s  =  N  +  P  +  w  "<<std::endl;
+    std::cout<<std::setprecision(3) << s <<" = "<< num_s*num <<" + "<< prob_s*prob <<" + "<< weight_s*weight_sur <<std::endl;
 
     //壁判定＆瞬間移動判定
     double wall = 0.0;
@@ -1067,8 +1047,7 @@ void DistanceBasedLocalizer::calculate_score(double num,double new_sur,geometry_
     score.pose = current_pose;
     score.score = s;
     score.dscore = s - old_s;
-    // if(s-old_s > 0.5) std::cout<<"roomba"<<roomba_name<<"INC"<<s-old_s<<std::endl;
-    // if(s-old_s < -0.5) std::cout<<"roomba"<<roomba_name<<"DEC"<<s-old_s<<std::endl;
+    old_s = s;
     // if(roomba_name == 1)
     // {
         // std::cout<<"roomba"<<roomba_name<<"LM"<<island<<std::endl;
@@ -1162,7 +1141,8 @@ void DistanceBasedLocalizer::process()
             if(!isnan(db_poses.poses[0].position.x) || !isnan(db_poses.poses[0].position.y)) pub_db_poses.publish(db_poses);
             if(!isnan(db_pose.pose.position.x) || !isnan(db_pose.pose.position.y)) pub_db_pose.publish(db_pose);
             roomba_position();
-            calculate_score(obj_num,sur,db_pose);
+            std::cout<<"before_calc:"<<probs_for_score<<std::endl;
+            calculate_score(obj_num,sur,db_pose,probs_for_score);
             if(is_move)
             {
                 // calculate_score(obj_num,sur,db_pose);

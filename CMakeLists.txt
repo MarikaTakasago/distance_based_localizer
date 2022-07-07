@@ -149,6 +149,9 @@ add_executable(distance_based_localizer_odom src/distance_based_localizer_odom.c
 add_executable(evaluation src/evaluation.cpp)
 add_executable(vanish src/vanish.cpp)
 add_executable(listen6 src/listen6.cpp)
+add_executable(norm src/norm.cpp)
+add_executable(message_filtered src/message_filtered.cpp)
+add_executable(otamesifilter src/otamesifilter.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -168,6 +171,9 @@ add_dependencies(distance_based_localizer_odom ${${PROJECT_NAME}_EXPORTED_TARGET
 add_dependencies(evaluation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(vanish ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(listen6 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(norm ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(message_filtered ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(otamesifilter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
@@ -183,6 +189,9 @@ target_link_libraries(distance_based_localizer_odom ${catkin_LIBRARIES})
 target_link_libraries(evaluation ${catkin_LIBRARIES})
 target_link_libraries(vanish ${catkin_LIBRARIES})
 target_link_libraries(listen6 ${catkin_LIBRARIES})
+target_link_libraries(norm ${catkin_LIBRARIES})
+target_link_libraries(message_filtered ${catkin_LIBRARIES})
+target_link_libraries(otamesifilter ${catkin_LIBRARIES})
 
 #############
 ## Install ##

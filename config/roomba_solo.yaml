@@ -1,6 +1,6 @@
 num_s: 1.0
 weight_s: 0.8
-probs_s: 1.0
+prob_s: 1.0
 particle_num: 300
 yaw_init: 1.57
 bench: 1.0

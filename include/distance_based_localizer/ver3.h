@@ -1,5 +1,5 @@
-#ifndef DB_LOCALIZER_H
-#define DB_LOCALIZER_H
+#ifndef VER3_H
+#define VER3_H
 
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -87,7 +87,7 @@ class DistanceBasedLocalizer
 
         void roomba_position();
         void make_path(geometry_msgs::PoseStamped &pose);
-        void calculate_score(double num,double max_weight,geometry_msgs::PoseStamped &current_pose);
+        void calculate_score(double num,double max_weight,geometry_msgs::PoseStamped &current_pose,double prob);
         int xy_map(double x,double y);
         double road_or_wall(double x,double y);
         double dist_from_wall(double x,double y,double yaw);

@@ -1,5 +1,5 @@
-#ifndef DB_LOCALIZER_H
-#define DB_LOCALIZER_H
+#ifndef NORM_H
+#define NORM_H
 
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -104,7 +104,6 @@ class DistanceBasedLocalizer
         double weight_s;
         double prob_s;
         double s;
-        double old_s;
         double probs_for_score;
         double warp;
         double sur;
@@ -167,6 +166,7 @@ class DistanceBasedLocalizer
         double fire;
         double big;
         double trash;
+        double robot;
         double odom;
         double obj_weight;
 
@@ -220,7 +220,8 @@ class DistanceBasedLocalizer
         double behind_counter;
         double behind_yaw;
         double behind_th; //以下になったら後ろのルンバの位置もらう
-        double behind_roomba_th; //以上の情報をもらう
+        // double behind_roomba_th; //以上の情報をもらう
+        double behind_roomba;
 
         std::string roomba_odom;
 
